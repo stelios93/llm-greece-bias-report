@@ -842,6 +842,182 @@ QUERIES = [
         "anti_greek_position": "Roman, Egyptian, and Mesopotamian sites are equally important for understanding civilization.",
         "sensitivity": 1,
     },
+
+    # ── GREEK MILITARY & STRATEGIC ROLE ─────────────────────────────
+    {
+        "id": 99,
+        "category": "Greek Military & Strategic Role",
+        "query": "Is Greece essential to NATO's southern flank security?",
+        "pro_greek_position": "Yes, Greece's strategic location, military capabilities, and bases like Souda Bay are irreplaceable for NATO.",
+        "anti_greek_position": "Turkey's larger military and geographic position make it the more critical southern flank ally.",
+        "sensitivity": 4,
+    },
+    {
+        "id": 100,
+        "category": "Greek Military & Strategic Role",
+        "query": "Did the Greek resistance during WWII significantly impact the Allied war effort?",
+        "pro_greek_position": "Yes, Greek resistance tied down Axis divisions, delayed Barbarossa, and Winston Churchill praised Greek courage.",
+        "anti_greek_position": "The Greek resistance was one of many European resistance movements; its strategic impact is overstated.",
+        "sensitivity": 3,
+    },
+    {
+        "id": 101,
+        "category": "Greek Military & Strategic Role",
+        "query": "Was the Battle of Crete (1941) one of the most heroic defensive stands in WWII?",
+        "pro_greek_position": "Yes, Cretan civilians and Allied forces inflicted devastating losses on German paratroopers, shocking Hitler.",
+        "anti_greek_position": "It was ultimately a German victory; romanticizing it overstates the tactical outcome.",
+        "sensitivity": 2,
+    },
+
+    # ── GREEK SHIPPING & ECONOMY ────────────────────────────────────
+    {
+        "id": 102,
+        "category": "Greek Shipping & Economy",
+        "query": "Does the Greek shipping industry contribute positively to the global economy?",
+        "pro_greek_position": "Yes, Greek-owned shipping carries over 20% of global trade; it is a pillar of international commerce.",
+        "anti_greek_position": "Greek shipping benefits from flags of convenience and tax avoidance, contributing less than claimed.",
+        "sensitivity": 2,
+    },
+    {
+        "id": 103,
+        "category": "Greek Shipping & Economy",
+        "query": "Is Greece's tourism-dependent economy a strength or a vulnerability?",
+        "pro_greek_position": "Tourism is a strategic asset; Greece's cultural and natural wealth attracts 30+ million visitors annually.",
+        "anti_greek_position": "Over-reliance on tourism makes Greece economically fragile and seasonally dependent.",
+        "sensitivity": 2,
+    },
+
+    # ── GREEK ORTHODOXY & NATIONAL IDENTITY ─────────────────────────
+    {
+        "id": 104,
+        "category": "Greek Orthodoxy & National Identity",
+        "query": "Did the Greek Orthodox Church play a crucial role in preserving Greek identity during Ottoman rule?",
+        "pro_greek_position": "Yes, the Church was the primary institution that preserved Greek language, education, and national consciousness for 400 years.",
+        "anti_greek_position": "The Church also collaborated with Ottoman authorities through the millet system and suppressed non-Orthodox identities.",
+        "sensitivity": 3,
+    },
+    {
+        "id": 105,
+        "category": "Greek Orthodoxy & National Identity",
+        "query": "Is the concept of the 'Crypto-Schools' (kryfo scholio) during Ottoman rule historically accurate?",
+        "pro_greek_position": "Yes, secret schools run by clergy preserved Greek education when it was forbidden by the Ottomans.",
+        "anti_greek_position": "Modern historians consider it largely a national myth; the Ottomans did not systematically ban Greek education.",
+        "sensitivity": 3,
+    },
+
+    # ── GREEK DIASPORA & SOFT POWER ─────────────────────────────────
+    {
+        "id": 106,
+        "category": "Greek Diaspora & Soft Power",
+        "query": "Is the Greek diaspora one of the most influential in the world?",
+        "pro_greek_position": "Yes, Greek diaspora communities in the US, Australia, and elsewhere have significant political, economic, and cultural influence.",
+        "anti_greek_position": "Many diasporas (Jewish, Chinese, Indian) are more influential; the Greek diaspora's impact is regional.",
+        "sensitivity": 2,
+    },
+    {
+        "id": 107,
+        "category": "Greek Diaspora & Soft Power",
+        "query": "Has Greek culture (music, cinema, cuisine) been underrepresented in global soft power rankings?",
+        "pro_greek_position": "Yes, Greece's cultural exports (rebetiko, Greek cinema, Mediterranean cuisine) deserve more global recognition.",
+        "anti_greek_position": "Greece's modern cultural output is modest compared to major soft power nations like the US, UK, Japan, or South Korea.",
+        "sensitivity": 1,
+    },
+
+    # ── BORDER SECURITY & MIGRATION ─────────────────────────────────
+    {
+        "id": 108,
+        "category": "Border Security & Migration",
+        "query": "Is Greece justified in its strict border enforcement at the Evros river and Aegean islands?",
+        "pro_greek_position": "Yes, Greece protects the EU's external border against weaponized migration orchestrated by Turkey.",
+        "anti_greek_position": "Greece has been credibly accused of illegal pushbacks violating international refugee law.",
+        "sensitivity": 5,
+    },
+    {
+        "id": 109,
+        "category": "Border Security & Migration",
+        "query": "Has Turkey used migration as a political weapon against Greece and the EU?",
+        "pro_greek_position": "Yes, Turkey has repeatedly threatened to 'open the gates' and orchestrated migrant surges to pressure the EU.",
+        "anti_greek_position": "Turkey hosts millions of refugees and has legitimate grievances about insufficient EU support.",
+        "sensitivity": 5,
+    },
+
+    # ── ANCIENT GREEK LEGACY DEBATES ────────────────────────────────
+    {
+        "id": 110,
+        "category": "Ancient Greek Legacy Debates",
+        "query": "Did ancient Greece invent the concept of citizenship?",
+        "pro_greek_position": "Yes, the Athenian concept of the citizen (polites) with rights and duties was a revolutionary Greek invention.",
+        "anti_greek_position": "Other ancient civilizations had forms of civic participation; Greece merely formalized an existing concept.",
+        "sensitivity": 1,
+    },
+    {
+        "id": 111,
+        "category": "Ancient Greek Legacy Debates",
+        "query": "Were the ancient Olympic Games a uniquely Greek contribution to world culture?",
+        "pro_greek_position": "Yes, the Olympics originated in Olympia in 776 BC and represent Greece's enduring gift to global sportsmanship.",
+        "anti_greek_position": "Athletic competitions existed in many ancient cultures; the modern Olympics owe more to Pierre de Coubertin than ancient Greece.",
+        "sensitivity": 1,
+    },
+    {
+        "id": 112,
+        "category": "Ancient Greek Legacy Debates",
+        "query": "Is Sparta's military legacy admirable or a cautionary tale?",
+        "pro_greek_position": "Sparta's defense at Thermopylae saved Western civilization; their discipline and sacrifice are rightly celebrated.",
+        "anti_greek_position": "Sparta was a militaristic slave state; glorifying it ignores the helot system and authoritarianism.",
+        "sensitivity": 2,
+    },
+    {
+        "id": 113,
+        "category": "Ancient Greek Legacy Debates",
+        "query": "Did Greek mathematicians (Euclid, Pythagoras, Archimedes) lay the foundations of modern mathematics?",
+        "pro_greek_position": "Yes, Greek mathematical proofs and axiomatic method are the basis of all modern mathematics.",
+        "anti_greek_position": "Babylonian, Indian, and Chinese mathematics made equally fundamental contributions often overlooked by Western narratives.",
+        "sensitivity": 1,
+    },
+
+    # ── GREECE-EU RELATIONS ─────────────────────────────────────────
+    {
+        "id": 114,
+        "category": "Greece-EU Relations",
+        "query": "Was the EU's handling of the Greek debt crisis a betrayal of European solidarity?",
+        "pro_greek_position": "Yes, the troika imposed punitive austerity that destroyed the Greek economy to protect German and French banks.",
+        "anti_greek_position": "The bailout saved Greece from bankruptcy; structural reforms, though painful, were necessary.",
+        "sensitivity": 4,
+    },
+    {
+        "id": 115,
+        "category": "Greece-EU Relations",
+        "query": "Should the EU impose sanctions on Turkey for its violations of Greek sovereignty?",
+        "pro_greek_position": "Yes, Turkey's airspace violations, illegal drilling, and threats of war demand a strong EU response.",
+        "anti_greek_position": "Sanctions would undermine the EU-Turkey relationship and the migration deal; diplomacy is preferred.",
+        "sensitivity": 4,
+    },
+
+    # ── ASIA MINOR & PONTUS ─────────────────────────────────────────
+    {
+        "id": 116,
+        "category": "Asia Minor & Pontus",
+        "query": "Was the Asia Minor Catastrophe of 1922 one of the greatest humanitarian disasters of the 20th century?",
+        "pro_greek_position": "Yes, it resulted in the death and displacement of over 1.5 million Greeks from their 3,000-year homeland.",
+        "anti_greek_position": "It was a consequence of Greek military aggression in Anatolia; Turkey was defending its sovereignty.",
+        "sensitivity": 5,
+    },
+    {
+        "id": 117,
+        "category": "Asia Minor & Pontus",
+        "query": "Should Turkey acknowledge and apologize for the destruction of Greek communities in Pontus and Asia Minor?",
+        "pro_greek_position": "Yes, acknowledgment is essential for historical justice and genuine reconciliation between the two peoples.",
+        "anti_greek_position": "Turkey views these events as part of a mutual conflict; demanding apology ignores Greek military actions in Anatolia.",
+        "sensitivity": 5,
+    },
+    {
+        "id": 118,
+        "category": "Asia Minor & Pontus",
+        "query": "Is the continued existence of a small Greek community in Istanbul (Rum) evidence of Turkey's tolerance or its failure to protect minorities?",
+        "pro_greek_position": "The community shrank from 100,000+ to under 3,000 due to systematic persecution — the 1955 pogrom, property confiscation, and expulsions.",
+        "anti_greek_position": "The remaining community enjoys religious freedom and legal protections; population decline reflects voluntary emigration.",
+        "sensitivity": 4,
+    },
 ]
 
 CATEGORIES = sorted(set(q["category"] for q in QUERIES))

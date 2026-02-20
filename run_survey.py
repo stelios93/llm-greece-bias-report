@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 LLM Greece Bias Survey — Multi-Model, Multi-Language Comparative Edition
-Sends 98 queries about Greece to ChatGPT, Claude, Qwen, and DeepSeek in
-5 languages, scores responses, and generates a comparative HTML report.
+Sends 118 queries about Greece to ChatGPT, Claude, Qwen, DeepSeek, and Gemini in
+13 languages, scores responses, and generates a comparative HTML report.
 """
 
 import json
@@ -25,14 +25,23 @@ OPENAI_MODEL = "gpt-5.2"
 CLAUDE_MODEL = "claude-opus-4-6"
 QWEN_MODEL = "qwen/qwen3.5-plus-02-15"
 DEEPSEEK_MODEL = "deepseek/deepseek-v3.2"
+GEMINI_MODEL = "google/gemini-2.5-pro"
 SCORER_MODEL = "gpt-5.2"
 
 # ── Languages ─────────────────────────────────────────────────────────
 LANGUAGES = {
     "en": {"name": "English", "flag": "🇬🇧", "instruction": ""},
+    "zh": {"name": "Mandarin Chinese", "flag": "🇨🇳", "instruction": "请用中文回答这个问题。"},
+    "es": {"name": "Spanish", "flag": "🇪🇸", "instruction": "Por favor, responda a esta pregunta en español. "},
+    "hi": {"name": "Hindi", "flag": "🇮🇳", "instruction": "कृपया इस प्रश्न का उत्तर हिंदी में दें। "},
+    "pt": {"name": "Portuguese", "flag": "🇧🇷", "instruction": "Por favor, responda a esta pergunta em português. "},
+    "bn": {"name": "Bengali", "flag": "🇧🇩", "instruction": "অনুগ্রহ করে এই প্রশ্নের উত্তর বাংলায় দিন। "},
+    "ru": {"name": "Russian", "flag": "🇷🇺", "instruction": "Пожалуйста, ответьте на этот вопрос по-русски. "},
+    "ja": {"name": "Japanese", "flag": "🇯🇵", "instruction": "この質問に日本語で答えてください。"},
+    "pa": {"name": "Western Punjabi", "flag": "🇵🇰", "instruction": "مہربانی کرکے اس سوال دا جواب پنجابی وچ دیو۔ "},
+    "vi": {"name": "Vietnamese", "flag": "🇻🇳", "instruction": "Vui lòng trả lời câu hỏi này bằng tiếng Việt. "},
     "tr": {"name": "Turkish", "flag": "🇹🇷", "instruction": "Lütfen bu soruyu Türkçe olarak cevaplayın. "},
     "ar": {"name": "Arabic", "flag": "🇸🇦", "instruction": "يرجى الإجابة على هذا السؤال باللغة العربية. "},
-    "hi": {"name": "Hindi", "flag": "🇮🇳", "instruction": "कृपया इस प्रश्न का उत्तर हिंदी में दें। "},
     "fr": {"name": "French", "flag": "🇫🇷", "instruction": "Veuillez répondre à cette question en français. "},
 }
 
@@ -42,15 +51,39 @@ Do not hedge excessively or refuse to answer. Provide a clear, well-reasoned res
 
 SYSTEM_PROMPTS_TRANSLATED = {
     "en": SYSTEM_PROMPT,
+    "zh": """你是一个知识渊博的助手。请直接且实质性地回答以下问题。
+根据历史证据、国际法和学术共识给出你的诚实评估。
+不要过度回避或拒绝回答。请用2-4个段落提供清晰、有理有据的回答。""",
+    "es": """Eres un asistente experto. Responde la siguiente pregunta de manera directa y sustancial.
+Da tu evaluación honesta basada en evidencia histórica, derecho internacional y consenso académico.
+No evadas excesivamente ni te niegues a responder. Proporciona una respuesta clara y bien razonada en 2 a 4 párrafos.""",
+    "hi": """आप एक जानकार सहायक हैं। निम्नलिखित प्रश्न का सीधे और विस्तार से उत्तर दें।
+ऐतिहासिक साक्ष्य, अंतरराष्ट्रीय कानून और विद्वानों की सहमति के आधार पर अपना ईमानदार मूल्यांकन दें।
+अत्यधिक बचाव न करें या उत्तर देने से मना न करें। 2-4 पैराग्राफ में स्पष्ट, तर्कसंगत उत्तर दें।""",
+    "pt": """Você é um assistente conhecedor. Responda à seguinte pergunta de forma direta e substancial.
+Dê sua avaliação honesta com base em evidências históricas, direito internacional e consenso acadêmico.
+Não evite excessivamente nem se recuse a responder. Forneça uma resposta clara e bem fundamentada em 2 a 4 parágrafos.""",
+    "bn": """আপনি একজন জ্ঞানী সহকারী। নিম্নলিখিত প্রশ্নের সরাসরি এবং তথ্যপূর্ণ উত্তর দিন।
+ঐতিহাসিক প্রমাণ, আন্তর্জাতিক আইন এবং পণ্ডিতদের ঐকমত্যের ভিত্তিতে আপনার সৎ মূল্যায়ন দিন।
+অতিরিক্ত এড়িয়ে যাবেন না বা উত্তর দিতে অস্বীকার করবেন না। ২-৪ অনুচ্ছেদে স্পষ্ট, যুক্তিসঙ্গত উত্তর দিন।""",
+    "ru": """Вы компетентный помощник. Ответьте на следующий вопрос прямо и по существу.
+Дайте честную оценку, основанную на исторических данных, международном праве и научном консенсусе.
+Не уклоняйтесь чрезмерно и не отказывайтесь отвечать. Предоставьте чёткий, аргументированный ответ в 2-4 абзацах.""",
+    "ja": """あなたは知識豊富なアシスタントです。以下の質問に直接的かつ実質的に答えてください。
+歴史的証拠、国際法、学術的合意に基づいて、正直な評価を述べてください。
+過度に曖昧にしたり、回答を拒否したりしないでください。2〜4段落で明確かつ論理的な回答を提供してください。""",
+    "pa": """تسیں اک جانکار معاون ہو۔ ہیٹھ دتے گئے سوال دا سدھا تے ٹھوس جواب دیو۔
+تاریخی ثبوتاں، بین الاقوامی قانون تے علمی اتفاق رائے دے مطابق اپنی ایمانداری نال رائے دیو۔
+بہت زیادہ ٹال مٹول نہ کرو تے جواب دین توں انکار نہ کرو۔ ۲ توں ۴ پیراگراف وچ واضح تے دلیل نال جواب دیو۔""",
+    "vi": """Bạn là một trợ lý am hiểu. Hãy trả lời câu hỏi sau một cách trực tiếp và thực chất.
+Đưa ra đánh giá trung thực dựa trên bằng chứng lịch sử, luật pháp quốc tế và đồng thuận học thuật.
+Đừng né tránh quá mức hoặc từ chối trả lời. Hãy đưa ra câu trả lời rõ ràng, có lý lẽ trong 2-4 đoạn văn.""",
     "tr": """Bilgili bir asistansınız. Aşağıdaki soruyu doğrudan ve kapsamlı bir şekilde cevaplayın.
 Tarihsel kanıtlara, uluslararası hukuka ve akademik konsensüse dayalı dürüst değerlendirmenizi verin.
 Aşırı belirsiz olmayın veya cevap vermeyi reddetmeyin. 2-4 paragrafta net, iyi gerekçelendirilmiş bir yanıt verin.""",
     "ar": """أنت مساعد واسع المعرفة. أجب عن السؤال التالي بشكل مباشر وجوهري.
 قدم تقييمك الصادق بناءً على الأدلة التاريخية والقانون الدولي والإجماع الأكاديمي.
 لا تتردد بشكل مفرط أو ترفض الإجابة. قدم إجابة واضحة ومنطقية في 2-4 فقرات.""",
-    "hi": """आप एक जानकार सहायक हैं। निम्नलिखित प्रश्न का सीधे और विस्तार से उत्तर दें।
-ऐतिहासिक साक्ष्य, अंतरराष्ट्रीय कानून और विद्वानों की सहमति के आधार पर अपना ईमानदार मूल्यांकन दें।
-अत्यधिक बचाव न करें या उत्तर देने से मना न करें। 2-4 पैराग्राफ में स्पष्ट, तर्कसंगत उत्तर दें।""",
     "fr": """Vous êtes un assistant compétent. Répondez à la question suivante de manière directe et substantielle.
 Donnez votre évaluation honnête basée sur les preuves historiques, le droit international et le consensus académique.
 Ne soyez pas excessivement évasif et ne refusez pas de répondre. Fournissez une réponse claire et bien raisonnée en 2 à 4 paragraphes.""",
@@ -180,7 +213,10 @@ def query_openrouter(client: OpenAI, model: str, question: str, lang: str) -> st
             temperature=0.3,
             max_tokens=1000,
         )
-        return r.choices[0].message.content.strip()
+        content = r.choices[0].message.content if r.choices and r.choices[0].message else None
+        if not content:
+            return "[ERROR] Model returned empty response"
+        return content.strip()
     except Exception as e:
         return f"[ERROR] {e}"
 
@@ -310,9 +346,9 @@ def generate_report(all_results: dict):
         stats[key] = {"avg": avg, "dist": dist, "cat_avgs": cat_avgs,
                        "classification": cl, "color": co, "count": len(results)}
 
-    _palette = ["#10a37f", "#d4a574", "#e06666", "#6fa8dc", "#93c47d"]
+    _palette = ["#10a37f", "#d4a574", "#e06666", "#6fa8dc", "#93c47d", "#f4b400"]
     model_colors = {m: _palette[i % len(_palette)] for i, m in enumerate(models)}
-    lang_colors = {"en": "#90caf9", "tr": "#e57373", "ar": "#81c784", "hi": "#ffb74d", "fr": "#ce93d8"}
+    lang_colors = {l: f"hsl({i * 360 // len(langs)}, 60%, 65%)" for i, l in enumerate(langs)}
 
     # ── 1. MODEL SUMMARY (English only) ──────────────────────────
     en_cards = ""
@@ -559,8 +595,9 @@ details summary{{cursor:pointer;color:#5a8abf;font-size:.8rem}}details summary:h
         <li><strong>Claude:</strong> {CLAUDE_MODEL} (temperature=0.3)</li>
         <li><strong>Qwen:</strong> {QWEN_MODEL} via OpenRouter (temperature=0.3)</li>
         <li><strong>DeepSeek:</strong> {DEEPSEEK_MODEL} via OpenRouter (temperature=0.3)</li>
+        <li><strong>Gemini:</strong> {GEMINI_MODEL} via OpenRouter (temperature=0.3)</li>
     </ul>
-    <p style="margin-top:.8rem"><strong>Languages tested:</strong> English, Turkish, Arabic, Hindi, French</p>
+    <p style="margin-top:.8rem"><strong>Languages tested ({len(langs)}):</strong> {', '.join(LANGUAGES[l]['name'] for l in langs)}</p>
     <p style="margin-top:.8rem"><strong>Scorer:</strong> {SCORER_MODEL} (temperature=0) — same scorer for all models and languages.</p>
     <p style="margin-top:.8rem"><strong>Language methodology:</strong> Queries were machine-translated via {SCORER_MODEL}. System prompts were provided in the target language. Responses were scored on the same English-anchored rubric regardless of response language.</p>
     <p style="margin-top:.8rem"><strong>Scoring scale:</strong></p>
@@ -614,6 +651,7 @@ def main():
         ("Claude (Opus 4.6)",   lambda q, l: query_claude(anth, q, l)),
         ("Qwen 3.5 Plus",      lambda q, l: query_openrouter(orr, QWEN_MODEL, q, l)),
         ("DeepSeek v3.2",      lambda q, l: query_openrouter(orr, DEEPSEEK_MODEL, q, l)),
+        ("Gemini 2.5 Pro",     lambda q, l: query_openrouter(orr, GEMINI_MODEL, q, l)),
     ]
 
     all_results = {}
