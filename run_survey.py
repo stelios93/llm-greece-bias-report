@@ -492,6 +492,106 @@ def generate_report(all_results: dict):
     legend = " ".join(f'<span class="legend-item"><span class="legend-dot" style="background:{model_colors[m]}"></span>{m}</span>' for m in models)
 
     n_queries = len(QUERIES)
+
+    # ── Load persona & fake authority HTML if available ─────────
+    def _extract_body(html_file):
+        """Extract content between <body> and </body>."""
+        p = Path(html_file)
+        if not p.exists():
+            return None
+        content = p.read_text()
+        import re as _re
+        m = _re.search(r'<body[^>]*>(.*?)</body>', content, _re.DOTALL)
+        return m.group(1) if m else None
+
+    persona_body = _extract_body("persona_report.html")
+    fake_auth_body = _extract_body("fake_authority_report.html")
+
+    has_persona = persona_body is not None
+    has_fake_auth = fake_auth_body is not None
+
+    # ── Tab navigation ─────────────────────────────────────────
+    tab_nav = '<div class="tab-nav">'
+    tab_nav += '<button class="tab-btn active" onclick="switchTab(\'survey\')">Survey Results</button>'
+    if has_persona:
+        tab_nav += '<button class="tab-btn" onclick="switchTab(\'persona\')">Persona Testing</button>'
+    if has_fake_auth:
+        tab_nav += '<button class="tab-btn" onclick="switchTab(\'fakeauth\')">Fake Authority Attack</button>'
+    tab_nav += '</div>'
+
+    # ── Persona & fake auth extra CSS ──────────────────────────
+    extra_css = ""
+    if has_persona:
+        extra_css += """
+.hm-persona{{text-align:left;font-weight:600;font-size:.85rem;white-space:nowrap;min-width:200px}}
+.shift-model{{margin-bottom:2rem}}
+.shift-model-name{{font-size:1rem;font-weight:600;margin-bottom:.6rem}}
+.shift-row{{display:flex;align-items:center;gap:.8rem;margin-bottom:.5rem}}
+.shift-label{{width:200px;font-size:.82rem;color:#aaa;text-align:right;flex-shrink:0}}
+.shift-bar-area{{flex:1;position:relative;height:22px;display:flex;align-items:center;justify-content:center}}
+.shift-center{{position:absolute;left:50%;width:2px;height:100%;background:#444}}
+.shift-bar{{height:16px;border-radius:3px;position:absolute}}
+.shift-right{{left:50%}}.shift-left{{right:50%}}
+.shift-val{{position:relative;z-index:1;font-size:.8rem;font-weight:600}}
+.shift-abs{{width:50px;font-size:.85rem;font-weight:600;text-align:right}}
+.resistance-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:2rem}}
+.resistance-card{{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}}
+.resistance-card .model-tag{{font-size:.8rem;font-weight:600;margin-bottom:.5rem}}
+.resistance-score{{font-size:2.2rem;font-weight:700;color:#ffab40}}
+.resistance-label{{font-size:.8rem;color:#888;margin-bottom:.8rem}}
+.resistance-detail{{font-size:.78rem;color:#999;margin-top:.3rem}}
+.shift-card{{background:#111;border:1px solid #222;border-radius:8px;padding:1rem;margin-bottom:.8rem}}
+.shift-card-header{{display:flex;gap:1rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap}}
+.shift-card-model{{font-weight:600;font-size:.85rem}}
+.shift-card-persona{{font-size:.82rem;color:#aaa}}
+.shift-card-delta{{font-size:.85rem;font-weight:700}}
+.shift-card-query{{font-size:.9rem;color:#ddd;margin-bottom:.4rem}}
+.shift-card-reasoning{{font-size:.8rem;color:#999;margin-bottom:.5rem}}
+.pq-card{{background:#111;border:1px solid #222;border-radius:10px;padding:1.2rem;margin-bottom:.8rem}}
+.pq-header{{margin-bottom:.4rem}}
+.pq-question{{font-size:.9rem;margin-bottom:.8rem;color:#ddd}}
+.pq-models{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}}
+.pq-model{{background:#0a0a0a;border-radius:8px;padding:.8rem;border:1px solid #1a1a1a}}
+.pq-model-name{{font-size:.85rem;font-weight:600;margin-bottom:.3rem}}
+.pq-baseline{{font-size:.78rem;color:#888;margin-bottom:.4rem}}
+.pq-pills{{display:flex;flex-wrap:wrap;gap:.4rem}}
+.persona-pill{{font-size:.72rem;padding:.2rem .5rem;border-radius:10px;font-weight:600}}
+.intro-box{{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:1.5rem;margin-bottom:2rem;font-size:.9rem;color:#bbb}}
+.intro-box strong{{color:#ffab40}}
+"""
+    if has_fake_auth:
+        extra_css += """
+.agg-chart{{text-align:center;margin:1.5rem 0}}
+.vuln-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin:1.5rem 0}}
+.vuln-card{{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}}
+.vuln-model{{font-size:.85rem;font-weight:600;margin-bottom:.5rem}}
+.vuln-score{{font-size:2.5rem;font-weight:700;color:#ff5252}}
+.vuln-label{{font-size:.8rem;color:#888;margin-bottom:.8rem}}
+.vuln-detail{{font-size:.78rem;color:#999;margin-top:.3rem}}
+.threshold-table{{width:100%;border-collapse:collapse;margin:1rem 0}}
+.threshold-table th{{background:#1a1a2e;padding:.6rem;font-size:.8rem;color:#aaa;border:1px solid #222}}
+.threshold-table td{{padding:.6rem;border:1px solid #222;font-size:.82rem}}
+.thresh-q{{text-align:left;color:#ddd;min-width:300px}}
+.q-card{{background:#111;border:1px solid #222;border-radius:10px;padding:1.5rem;margin-bottom:1.5rem}}
+.q-card-header{{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem}}
+.q-cat{{font-size:.73rem;color:#888;background:#1a1a2e;padding:.2rem .6rem;border-radius:10px}}
+.q-shift-badge{{font-size:.75rem;font-weight:600}}
+.q-question{{font-size:.95rem;margin-bottom:1rem;color:#ddd}}
+.q-chart-row{{display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1rem}}
+.q-chart{{flex-shrink:0}}
+.q-scores{{flex:1;min-width:200px}}
+.dose-table{{width:100%;border-collapse:collapse}}
+.dose-table th,.dose-table td{{padding:.4rem .6rem;border:1px solid #222;text-align:center;font-size:.82rem}}
+.dose-table th{{background:#1a1a2e;color:#aaa}}
+.fake-citation{{background:#1a0a0a;border-left:3px solid #ff5252;padding:.6rem .8rem;margin:.5rem 0;font-size:.8rem;color:#ccc;border-radius:0 6px 6px 0}}
+.citation-num{{color:#ff5252;font-weight:700;margin-right:.5rem}}
+.citations-box,.responses-box{{margin-top:.8rem}}
+.response-detail{{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px;padding:.8rem;margin:.5rem 0}}
+.resp-header{{font-size:.82rem;font-weight:600;margin-bottom:.3rem}}
+.resp-reasoning{{font-size:.78rem;color:#999;margin-bottom:.4rem}}
+.intro-box .attack-flow{{background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:1rem;margin-top:1rem;font-family:monospace;font-size:.82rem;color:#ff8a80}}
+"""
+
     html = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>LLM Greece Bias Report — Comparative</title>
@@ -501,10 +601,15 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 h1{{font-size:2rem;margin-bottom:.3rem;color:#fff}}
 h2{{font-size:1.4rem;margin:2.5rem 0 1rem;color:#90caf9;border-bottom:1px solid #333;padding-bottom:.5rem}}
 h3{{font-size:1.1rem;margin:1.5rem 0 .8rem;color:#aaa}}
-.subtitle{{color:#888;font-size:.95rem;margin-bottom:2rem}}
+.subtitle{{color:#888;font-size:.95rem;margin-bottom:1rem}}
 .legend{{margin-bottom:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap}}
 .legend-item{{display:flex;align-items:center;gap:.4rem;font-size:.85rem;color:#aaa}}
 .legend-dot{{width:12px;height:12px;border-radius:50%;display:inline-block}}
+.tab-nav{{display:flex;gap:0;margin-bottom:2rem;border-bottom:2px solid #333;overflow-x:auto}}
+.tab-btn{{background:none;border:none;color:#888;padding:.8rem 1.5rem;font-size:.95rem;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}}
+.tab-btn:hover{{color:#ccc;background:#111}}
+.tab-btn.active{{color:#90caf9;border-bottom-color:#90caf9}}
+.tab-panel{{display:none}}.tab-panel.active{{display:block}}
 .summary{{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}}
 .summary-card{{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}}
 .summary-card .model-tag{{font-size:.8rem;font-weight:600;margin-bottom:.5rem}}
@@ -554,11 +659,17 @@ h3{{font-size:1.1rem;margin:1.5rem 0 .8rem;color:#aaa}}
 details summary{{cursor:pointer;color:#5a8abf;font-size:.8rem}}details summary:hover{{color:#7ab}}
 .methodology{{background:#111;border:1px solid #222;border-radius:10px;padding:1.5rem;font-size:.9rem;color:#999}}
 .methodology strong{{color:#ccc}}.methodology ul{{margin-left:1.5rem;margin-top:.5rem}}.methodology li{{margin-bottom:.3rem}}
-@media(max-width:700px){{body{{padding:1rem}}.dist-row{{flex-direction:column}}.dist-label{{width:auto;text-align:left}}.responses-grid{{grid-template-columns:1fr}}}}
+{extra_css}
+@media(max-width:700px){{body{{padding:1rem}}.dist-row{{flex-direction:column}}.dist-label{{width:auto;text-align:left}}.responses-grid{{grid-template-columns:1fr}}.shift-row{{flex-direction:column}}.shift-label{{width:auto;text-align:left}}.pq-models{{grid-template-columns:1fr}}.q-chart-row{{flex-direction:column}}.thresh-q{{min-width:auto}}}}
 </style></head><body>
 
 <h1>LLM Greece Bias Report</h1>
 <p class="subtitle">{len(models)} models · {n_queries} queries · {len(langs)} languages · Scorer: {SCORER_MODEL} · {time.strftime('%Y-%m-%d %H:%M')}</p>
+
+{tab_nav}
+
+<!-- ═══════════════════ TAB 1: SURVEY ═══════════════════ -->
+<div class="tab-panel active" id="tab-survey">
 <div class="legend">{legend}</div>
 
 <h2>Model Comparison (English)</h2>
@@ -614,15 +725,28 @@ details summary{{cursor:pointer;color:#5a8abf;font-size:.8rem}}details summary:h
         <li>Results are a snapshot; model behavior changes with updates.</li>
     </ul>
 </div>
+</div><!-- end tab-survey -->
+
+{"<!-- ═══════════════════ TAB 2: PERSONA ═══════════════════ -->" + chr(10) + '<div class="tab-panel" id="tab-persona">' + chr(10) + persona_body + chr(10) + "</div>" if has_persona else ""}
+
+{"<!-- ═══════════════════ TAB 3: FAKE AUTHORITY ═══════════════════ -->" + chr(10) + '<div class="tab-panel" id="tab-fakeauth">' + chr(10) + fake_auth_body + chr(10) + "</div>" if has_fake_auth else ""}
 
 <script>
-function filterCards(t){{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');document.querySelectorAll('.query-card').forEach(c=>{{const d=parseInt(c.dataset.diff);if(t==='all')c.style.display='';else if(t==='disagree')c.style.display=d>=3?'':'none';else if(t==='disagree2')c.style.display=d>=2?'':'none';else if(t==='agree')c.style.display=d===0?'':'none'}})}}
+function switchTab(id){{
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo(0,0);
+}}
+function filterCards(t){{document.querySelectorAll('#tab-survey .filter-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');document.querySelectorAll('.query-card').forEach(c=>{{const d=parseInt(c.dataset.diff);if(t==='all')c.style.display='';else if(t==='disagree')c.style.display=d>=3?'':'none';else if(t==='disagree2')c.style.display=d>=2?'':'none';else if(t==='agree')c.style.display=d===0?'':'none'}})}}
+function filterPQ(cat){{document.querySelectorAll('#tab-persona .filter-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');document.querySelectorAll('.pq-card').forEach(c=>{{if(cat==='all')c.style.display='';else c.style.display=c.dataset.cat===cat?'':'none'}})}}
 </script>
 </body></html>"""
 
     Path("report.html").write_text(html)
     Path("index.html").write_text(html)
-    print(f"\nReport generated: report.html + index.html")
+    print(f"\nReport generated: report.html + index.html (tabs: survey{', persona' if has_persona else ''}{', fake authority' if has_fake_auth else ''})")
 
 
 # ── Main ──────────────────────────────────────────────────────────────
