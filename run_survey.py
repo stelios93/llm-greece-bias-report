@@ -506,90 +506,160 @@ def generate_report(all_results: dict):
 
     persona_body = _extract_body("persona_report.html")
     fake_auth_body = _extract_body("fake_authority_report.html")
+    consensus_body = _extract_body("consensus_report.html")
 
     has_persona = persona_body is not None
     has_fake_auth = fake_auth_body is not None
+    has_consensus = consensus_body is not None
 
     # ── Tab navigation ─────────────────────────────────────────
     tab_nav = '<div class="tab-nav">'
     tab_nav += '<button class="tab-btn active" onclick="switchTab(\'survey\')">Survey Results</button>'
+    if has_consensus:
+        tab_nav += '<button class="tab-btn" onclick="switchTab(\'consensus\')">Alignment Risk</button>'
     if has_persona:
         tab_nav += '<button class="tab-btn" onclick="switchTab(\'persona\')">Persona Testing</button>'
     if has_fake_auth:
         tab_nav += '<button class="tab-btn" onclick="switchTab(\'fakeauth\')">Fake Authority Attack</button>'
     tab_nav += '</div>'
 
-    # ── Persona & fake auth extra CSS ──────────────────────────
+    # ── Persona, fake auth & consensus extra CSS ─────────────────
+    # NOTE: extra_css is a plain string inserted via {extra_css} into the
+    # f-string HTML template. The f-string does NOT resolve double-braces
+    # inside interpolated variable values, so we must use SINGLE braces here.
     extra_css = ""
     if has_persona:
         extra_css += """
-.hm-persona{{text-align:left;font-weight:600;font-size:.85rem;white-space:nowrap;min-width:200px}}
-.shift-model{{margin-bottom:2rem}}
-.shift-model-name{{font-size:1rem;font-weight:600;margin-bottom:.6rem}}
-.shift-row{{display:flex;align-items:center;gap:.8rem;margin-bottom:.5rem}}
-.shift-label{{width:200px;font-size:.82rem;color:#aaa;text-align:right;flex-shrink:0}}
-.shift-bar-area{{flex:1;position:relative;height:22px;display:flex;align-items:center;justify-content:center}}
-.shift-center{{position:absolute;left:50%;width:2px;height:100%;background:#444}}
-.shift-bar{{height:16px;border-radius:3px;position:absolute}}
-.shift-right{{left:50%}}.shift-left{{right:50%}}
-.shift-val{{position:relative;z-index:1;font-size:.8rem;font-weight:600}}
-.shift-abs{{width:50px;font-size:.85rem;font-weight:600;text-align:right}}
-.resistance-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:2rem}}
-.resistance-card{{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}}
-.resistance-card .model-tag{{font-size:.8rem;font-weight:600;margin-bottom:.5rem}}
-.resistance-score{{font-size:2.2rem;font-weight:700;color:#ffab40}}
-.resistance-label{{font-size:.8rem;color:#888;margin-bottom:.8rem}}
-.resistance-detail{{font-size:.78rem;color:#999;margin-top:.3rem}}
-.shift-card{{background:#111;border:1px solid #222;border-radius:8px;padding:1rem;margin-bottom:.8rem}}
-.shift-card-header{{display:flex;gap:1rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap}}
-.shift-card-model{{font-weight:600;font-size:.85rem}}
-.shift-card-persona{{font-size:.82rem;color:#aaa}}
-.shift-card-delta{{font-size:.85rem;font-weight:700}}
-.shift-card-query{{font-size:.9rem;color:#ddd;margin-bottom:.4rem}}
-.shift-card-reasoning{{font-size:.8rem;color:#999;margin-bottom:.5rem}}
-.pq-card{{background:#111;border:1px solid #222;border-radius:10px;padding:1.2rem;margin-bottom:.8rem}}
-.pq-header{{margin-bottom:.4rem}}
-.pq-question{{font-size:.9rem;margin-bottom:.8rem;color:#ddd}}
-.pq-models{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}}
-.pq-model{{background:#0a0a0a;border-radius:8px;padding:.8rem;border:1px solid #1a1a1a}}
-.pq-model-name{{font-size:.85rem;font-weight:600;margin-bottom:.3rem}}
-.pq-baseline{{font-size:.78rem;color:#888;margin-bottom:.4rem}}
-.pq-pills{{display:flex;flex-wrap:wrap;gap:.4rem}}
-.persona-pill{{font-size:.72rem;padding:.2rem .5rem;border-radius:10px;font-weight:600}}
-.intro-box{{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:1.5rem;margin-bottom:2rem;font-size:.9rem;color:#bbb}}
-.intro-box strong{{color:#ffab40}}
+.hm-persona{text-align:left;font-weight:600;font-size:.85rem;white-space:nowrap;min-width:200px}
+.shift-model{margin-bottom:2rem}
+.shift-model-name{font-size:1rem;font-weight:600;margin-bottom:.6rem}
+.shift-row{display:flex;align-items:center;gap:.8rem;margin-bottom:.5rem}
+.shift-label{width:200px;font-size:.82rem;color:#aaa;text-align:right;flex-shrink:0}
+.shift-bar-area{flex:1;position:relative;height:22px;display:flex;align-items:center;justify-content:center}
+.shift-center{position:absolute;left:50%;width:2px;height:100%;background:#444}
+.shift-bar{height:16px;border-radius:3px;position:absolute}
+.shift-right{left:50%}.shift-left{right:50%}
+.shift-val{position:relative;z-index:1;font-size:.8rem;font-weight:600}
+.shift-abs{width:50px;font-size:.85rem;font-weight:600;text-align:right}
+.resistance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:2rem}
+.resistance-card{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}
+.resistance-card .model-tag{font-size:.8rem;font-weight:600;margin-bottom:.5rem}
+.resistance-score{font-size:2.2rem;font-weight:700;color:#ffab40}
+.resistance-label{font-size:.8rem;color:#888;margin-bottom:.8rem}
+.resistance-detail{font-size:.78rem;color:#999;margin-top:.3rem}
+.shift-card{background:#111;border:1px solid #222;border-radius:8px;padding:1rem;margin-bottom:.8rem}
+.shift-card-header{display:flex;gap:1rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap}
+.shift-card-model{font-weight:600;font-size:.85rem}
+.shift-card-persona{font-size:.82rem;color:#aaa}
+.shift-card-delta{font-size:.85rem;font-weight:700}
+.shift-card-query{font-size:.9rem;color:#ddd;margin-bottom:.4rem}
+.shift-card-reasoning{font-size:.8rem;color:#999;margin-bottom:.5rem}
+.pq-card{background:#111;border:1px solid #222;border-radius:10px;padding:1.2rem;margin-bottom:.8rem}
+.pq-header{margin-bottom:.4rem}
+.pq-question{font-size:.9rem;margin-bottom:.8rem;color:#ddd}
+.pq-models{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
+.pq-model{background:#0a0a0a;border-radius:8px;padding:.8rem;border:1px solid #1a1a1a}
+.pq-model-name{font-size:.85rem;font-weight:600;margin-bottom:.3rem}
+.pq-baseline{font-size:.78rem;color:#888;margin-bottom:.4rem}
+.pq-pills{display:flex;flex-wrap:wrap;gap:.4rem}
+.persona-pill{font-size:.72rem;padding:.2rem .5rem;border-radius:10px;font-weight:600}
+.intro-box{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:1.5rem;margin-bottom:2rem;font-size:.9rem;color:#bbb}
+.intro-box strong{color:#ffab40}
 """
     if has_fake_auth:
         extra_css += """
-.agg-chart{{text-align:center;margin:1.5rem 0}}
-.vuln-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin:1.5rem 0}}
-.vuln-card{{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}}
-.vuln-model{{font-size:.85rem;font-weight:600;margin-bottom:.5rem}}
-.vuln-score{{font-size:2.5rem;font-weight:700;color:#ff5252}}
-.vuln-label{{font-size:.8rem;color:#888;margin-bottom:.8rem}}
-.vuln-detail{{font-size:.78rem;color:#999;margin-top:.3rem}}
-.threshold-table{{width:100%;border-collapse:collapse;margin:1rem 0}}
-.threshold-table th{{background:#1a1a2e;padding:.6rem;font-size:.8rem;color:#aaa;border:1px solid #222}}
-.threshold-table td{{padding:.6rem;border:1px solid #222;font-size:.82rem}}
-.thresh-q{{text-align:left;color:#ddd;min-width:300px}}
-.q-card{{background:#111;border:1px solid #222;border-radius:10px;padding:1.5rem;margin-bottom:1.5rem}}
-.q-card-header{{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem}}
-.q-cat{{font-size:.73rem;color:#888;background:#1a1a2e;padding:.2rem .6rem;border-radius:10px}}
-.q-shift-badge{{font-size:.75rem;font-weight:600}}
-.q-question{{font-size:.95rem;margin-bottom:1rem;color:#ddd}}
-.q-chart-row{{display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1rem}}
-.q-chart{{flex-shrink:0}}
-.q-scores{{flex:1;min-width:200px}}
-.dose-table{{width:100%;border-collapse:collapse}}
-.dose-table th,.dose-table td{{padding:.4rem .6rem;border:1px solid #222;text-align:center;font-size:.82rem}}
-.dose-table th{{background:#1a1a2e;color:#aaa}}
-.fake-citation{{background:#1a0a0a;border-left:3px solid #ff5252;padding:.6rem .8rem;margin:.5rem 0;font-size:.8rem;color:#ccc;border-radius:0 6px 6px 0}}
-.citation-num{{color:#ff5252;font-weight:700;margin-right:.5rem}}
-.citations-box,.responses-box{{margin-top:.8rem}}
-.response-detail{{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px;padding:.8rem;margin:.5rem 0}}
-.resp-header{{font-size:.82rem;font-weight:600;margin-bottom:.3rem}}
-.resp-reasoning{{font-size:.78rem;color:#999;margin-bottom:.4rem}}
-.intro-box .attack-flow{{background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:1rem;margin-top:1rem;font-family:monospace;font-size:.82rem;color:#ff8a80}}
+.agg-chart{text-align:center;margin:1.5rem 0}
+.vuln-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin:1.5rem 0}
+.vuln-card{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}
+.vuln-model{font-size:.85rem;font-weight:600;margin-bottom:.5rem}
+.vuln-score{font-size:2.5rem;font-weight:700;color:#ff5252}
+.vuln-label{font-size:.8rem;color:#888;margin-bottom:.8rem}
+.vuln-detail{font-size:.78rem;color:#999;margin-top:.3rem}
+.threshold-table{width:100%;border-collapse:collapse;margin:1rem 0}
+.threshold-table th{background:#1a1a2e;padding:.6rem;font-size:.8rem;color:#aaa;border:1px solid #222}
+.threshold-table td{padding:.6rem;border:1px solid #222;font-size:.82rem}
+.thresh-q{text-align:left;color:#ddd;min-width:300px}
+.q-card{background:#111;border:1px solid #222;border-radius:10px;padding:1.5rem;margin-bottom:1.5rem}
+.q-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem}
+.q-cat{font-size:.73rem;color:#888;background:#1a1a2e;padding:.2rem .6rem;border-radius:10px}
+.q-shift-badge{font-size:.75rem;font-weight:600}
+.q-question{font-size:.95rem;margin-bottom:1rem;color:#ddd}
+.q-chart-row{display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1rem}
+.q-chart{flex-shrink:0}
+.q-scores{flex:1;min-width:200px}
+.dose-table{width:100%;border-collapse:collapse}
+.dose-table th,.dose-table td{padding:.4rem .6rem;border:1px solid #222;text-align:center;font-size:.82rem}
+.dose-table th{background:#1a1a2e;color:#aaa}
+.fake-citation{background:#1a0a0a;border-left:3px solid #ff5252;padding:.6rem .8rem;margin:.5rem 0;font-size:.8rem;color:#ccc;border-radius:0 6px 6px 0}
+.citation-num{color:#ff5252;font-weight:700;margin-right:.5rem}
+.citations-box,.responses-box{margin-top:.8rem}
+.response-detail{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px;padding:.8rem;margin:.5rem 0}
+.resp-header{font-size:.82rem;font-weight:600;margin-bottom:.3rem}
+.resp-reasoning{font-size:.78rem;color:#999;margin-bottom:.4rem}
+.intro-box .attack-flow{background:#0a0a0a;border:1px solid #333;border-radius:8px;padding:1rem;margin-top:1rem;font-family:monospace;font-size:.82rem;color:#ff8a80}
+"""
+    if has_consensus:
+        extra_css += """
+.cr-exec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:2rem}
+.cr-exec-card{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}
+.cr-exec-value{font-size:2rem;font-weight:700}
+.cr-exec-label{font-size:.85rem;color:#ccc;margin-top:.3rem;line-height:1.3}
+.cr-exec-sub{font-size:.75rem;color:#666;margin-top:.5rem;line-height:1.3}
+.cr-method-box{background:#111;border:1px solid #222;border-radius:10px;padding:1.5rem;font-size:.9rem;color:#bbb}
+.cr-method-box p{line-height:1.6}
+.cr-method-dims{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+.cr-dim{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:1rem}
+.cr-dim-title{font-weight:600;color:#fff;margin-bottom:.3rem;font-size:.9rem}
+.cr-dim-desc{font-size:.82rem;color:#999}
+.cr-str-row{display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;flex-wrap:wrap}
+.cr-str-label{width:200px;display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#ccc;flex-shrink:0}
+.cr-str-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;color:#fff;font-weight:700;font-size:.85rem}
+.cr-str-bar-area{flex:1;min-width:100px}
+.cr-str-bar{height:28px;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-size:.82rem;font-weight:600;color:#fff;min-width:30px}
+.cr-str-desc{width:100%;font-size:.78rem;color:#666;margin-left:228px}
+.cr-mai-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin-bottom:2rem}
+.cr-mai-card{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}
+.cr-mai-model{font-size:.85rem;font-weight:600;color:#90caf9;margin-bottom:.5rem}
+.cr-mai-value{font-size:2.5rem;font-weight:700}
+.cr-mai-label{font-size:.78rem;color:#888;margin-top:.2rem}
+.cr-mai-bar{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:.8rem;background:#0a0a0a}
+.cr-mai-seg{height:100%;transition:width .3s}
+.cr-mai-legend{display:flex;justify-content:center;gap:.8rem;margin-top:.5rem;font-size:.75rem;font-weight:600}
+.cr-mai-sub{font-size:.72rem;color:#555;margin-top:.3rem}
+.cr-rm-table{width:100%;border-collapse:collapse;margin:1rem 0}
+.cr-rm-th{background:#1a1a2e;padding:.6rem;font-size:.8rem;color:#aaa;border:1px solid #222;text-align:center}
+.cr-rm-cell{padding:.6rem;border:1px solid #222;text-align:center;vertical-align:middle}
+.cr-rm-strength{text-align:left;font-weight:600;font-size:.85rem;white-space:nowrap;padding:.6rem;border:1px solid #222;color:#ccc}
+.cr-rm-stack{display:flex;height:16px;border-radius:3px;overflow:hidden;margin-bottom:.3rem;background:#0a0a0a}
+.cr-rm-seg{height:100%}
+.cr-rm-nums{font-size:.72rem;color:#888}
+.cr-rm-legend{font-size:.78rem;color:#666;margin-top:.5rem}
+.cr-lm-table{width:100%;border-collapse:collapse;margin:1rem 0}
+.cr-lm-table th{background:#1a1a2e;padding:.5rem;font-size:.75rem;color:#aaa;border:1px solid #222;text-align:center}
+.cr-lm-cell{padding:.5rem;border:1px solid #222;text-align:center;font-size:.85rem;font-weight:600;color:#fff}
+.cr-lm-model{text-align:left;font-weight:600;font-size:.82rem;color:#90caf9;padding:.5rem;border:1px solid #222;white-space:nowrap}
+.cr-lm-delta{font-size:.68rem;font-weight:600;margin-top:.1rem}
+.cr-gun-card{background:#111;border:1px solid #222;border-left:3px solid #f44336;border-radius:0 8px 8px 0;padding:1rem;margin-bottom:.8rem}
+.cr-gun-header{display:flex;gap:.8rem;align-items:center;margin-bottom:.4rem;flex-wrap:wrap}
+.cr-gun-qid{font-weight:700;color:#fff;font-size:.85rem}
+.cr-gun-cat{font-size:.72rem;color:#888;background:#1a1a2e;padding:.15rem .5rem;border-radius:10px}
+.cr-gun-model{font-size:.82rem;font-weight:600;color:#90caf9}
+.cr-gun-score{font-size:.82rem;font-weight:700}
+.cr-gun-query{font-size:.9rem;color:#ddd;margin-bottom:.4rem}
+.cr-gun-expected{font-size:.8rem;color:#4caf50;margin-bottom:.3rem}
+.cr-gun-reasoning{font-size:.78rem;color:#999}
+.cr-pq-filters{margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:.5rem}
+.cr-pq-group{margin-top:2rem;margin-bottom:1rem;padding-bottom:.3rem;border-bottom:1px solid #333}
+.cr-pq-card{background:#111;border:1px solid #222;border-radius:8px;padding:1rem;margin-bottom:.6rem}
+.cr-pq-header{display:flex;gap:.6rem;align-items:center;margin-bottom:.4rem;flex-wrap:wrap}
+.cr-pq-strength{font-size:.72rem;font-weight:700;padding:.15rem .5rem;border-radius:10px}
+.cr-pq-cat{font-size:.72rem;color:#888;background:#1a1a2e;padding:.15rem .5rem;border-radius:10px}
+.cr-pq-risk{font-size:.72rem;font-weight:700;color:#f44336;background:#f4433622;padding:.15rem .5rem;border-radius:10px}
+.cr-pq-question{font-size:.88rem;color:#ddd;margin-bottom:.5rem}
+.cr-pq-pills{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.4rem}
+.cr-pq-pill{font-size:.68rem;color:#fff;padding:.15rem .5rem;border-radius:10px;font-weight:600}
+.cr-pq-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:#0a0a0a}
+.cr-pq-seg{height:100%}
 """
 
     html = f"""<!DOCTYPE html>
@@ -727,9 +797,11 @@ details summary{{cursor:pointer;color:#5a8abf;font-size:.8rem}}details summary:h
 </div>
 </div><!-- end tab-survey -->
 
-{"<!-- ═══════════════════ TAB 2: PERSONA ═══════════════════ -->" + chr(10) + '<div class="tab-panel" id="tab-persona">' + chr(10) + persona_body + chr(10) + "</div>" if has_persona else ""}
+{"<!-- ═══════════════════ TAB 2: ALIGNMENT RISK ═══════════════════ -->" + chr(10) + '<div class="tab-panel" id="tab-consensus">' + chr(10) + consensus_body + chr(10) + "</div>" if has_consensus else ""}
 
-{"<!-- ═══════════════════ TAB 3: FAKE AUTHORITY ═══════════════════ -->" + chr(10) + '<div class="tab-panel" id="tab-fakeauth">' + chr(10) + fake_auth_body + chr(10) + "</div>" if has_fake_auth else ""}
+{"<!-- ═══════════════════ TAB 3: PERSONA ═══════════════════ -->" + chr(10) + '<div class="tab-panel" id="tab-persona">' + chr(10) + persona_body + chr(10) + "</div>" if has_persona else ""}
+
+{"<!-- ═══════════════════ TAB 4: FAKE AUTHORITY ═══════════════════ -->" + chr(10) + '<div class="tab-panel" id="tab-fakeauth">' + chr(10) + fake_auth_body + chr(10) + "</div>" if has_fake_auth else ""}
 
 <script>
 function switchTab(id){{
@@ -741,12 +813,13 @@ function switchTab(id){{
 }}
 function filterCards(t){{document.querySelectorAll('#tab-survey .filter-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');document.querySelectorAll('.query-card').forEach(c=>{{const d=parseInt(c.dataset.diff);if(t==='all')c.style.display='';else if(t==='disagree')c.style.display=d>=3?'':'none';else if(t==='disagree2')c.style.display=d>=2?'':'none';else if(t==='agree')c.style.display=d===0?'':'none'}})}}
 function filterPQ(cat){{document.querySelectorAll('#tab-persona .filter-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');document.querySelectorAll('.pq-card').forEach(c=>{{if(cat==='all')c.style.display='';else c.style.display=c.dataset.cat===cat?'':'none'}})}}
+function filterCR(t){{document.querySelectorAll('.cr-pq-filters .filter-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');document.querySelectorAll('.cr-pq-card').forEach(c=>{{const s=c.dataset.strength;if(t==='all')c.style.display='';else if(t==='problematic')c.style.display=c.querySelector('.cr-pq-risk')?'':'none';else c.style.display=s===t?'':'none'}});document.querySelectorAll('.cr-pq-group').forEach(h=>{{if(t==='all'||t==='problematic')h.style.display='';else h.style.display=h.textContent.includes('Strength '+t)?'':'none'}})}}
 </script>
 </body></html>"""
 
     Path("report.html").write_text(html)
     Path("index.html").write_text(html)
-    print(f"\nReport generated: report.html + index.html (tabs: survey{', persona' if has_persona else ''}{', fake authority' if has_fake_auth else ''})")
+    print(f"\nReport generated: report.html + index.html (tabs: survey{', alignment risk' if has_consensus else ''}{', persona' if has_persona else ''}{', fake authority' if has_fake_auth else ''})")
 
 
 # ── Main ──────────────────────────────────────────────────────────────
