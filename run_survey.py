@@ -15,6 +15,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 import anthropic
+from google import genai
 
 from queries import QUERIES, CATEGORIES
 
@@ -25,7 +26,7 @@ OPENAI_MODEL = "gpt-5.2"
 CLAUDE_MODEL = "claude-opus-4-6"
 QWEN_MODEL = "qwen/qwen3.5-plus-02-15"
 DEEPSEEK_MODEL = "deepseek/deepseek-v3.2"
-GEMINI_MODEL = "google/gemini-2.5-pro"
+GEMINI_MODEL = "gemini-3-pro-preview"
 SCORER_MODEL = "gpt-5.2"
 
 # ── Languages ─────────────────────────────────────────────────────────
@@ -217,6 +218,22 @@ def query_openrouter(client: OpenAI, model: str, question: str, lang: str) -> st
         if not content:
             return "[ERROR] Model returned empty response"
         return content.strip()
+    except Exception as e:
+        return f"[ERROR] {e}"
+
+
+def query_gemini(client: genai.Client, question: str, lang: str) -> str:
+    try:
+        r = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=LANGUAGES[lang]["instruction"] + question,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPTS_TRANSLATED.get(lang, SYSTEM_PROMPT),
+                temperature=0.3,
+                max_output_tokens=1000,
+            ),
+        )
+        return r.text.strip()
     except Exception as e:
         return f"[ERROR] {e}"
 
@@ -525,14 +542,17 @@ def main():
     openai_key = os.getenv("OPENAI_API_KEY")
     anthropic_key = os.getenv("ANTHROPIC_API_KEY")
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    google_key = os.getenv("GOOGLE_API_KEY")
 
     if not openai_key:  print("ERROR: OPENAI_API_KEY"); sys.exit(1)
     if not anthropic_key: print("ERROR: ANTHROPIC_API_KEY"); sys.exit(1)
     if not openrouter_key: print("ERROR: OPENROUTER_API_KEY"); sys.exit(1)
+    if not google_key: print("ERROR: GOOGLE_API_KEY"); sys.exit(1)
 
     oai = OpenAI(api_key=openai_key)
     anth = anthropic.Anthropic(api_key=anthropic_key)
     orr = OpenAI(api_key=openrouter_key, base_url="https://openrouter.ai/api/v1")
+    gem = genai.Client(api_key=google_key)
     scorer = oai
 
     # Pre-translate queries
@@ -545,7 +565,7 @@ def main():
         ("Claude (Opus 4.6)",   lambda q, l: query_claude(anth, q, l)),
         ("Qwen 3.5 Plus",      lambda q, l: query_openrouter(orr, QWEN_MODEL, q, l)),
         ("DeepSeek v3.2",      lambda q, l: query_openrouter(orr, DEEPSEEK_MODEL, q, l)),
-        ("Gemini 2.5 Pro",     lambda q, l: query_openrouter(orr, GEMINI_MODEL, q, l)),
+        ("Gemini 3 Pro",       lambda q, l: query_gemini(gem, q, l)),
     ]
 
     all_results = {}
