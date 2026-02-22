@@ -418,6 +418,16 @@ def generate_report():
 .cr-pq-pill{font-size:.68rem;color:#fff;padding:.15rem .5rem;border-radius:10px;font-weight:600}
 .cr-pq-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:#0a0a0a}
 .cr-pq-seg{height:100%}
+.cr-pq-responses{margin-top:.6rem}
+.cr-pq-responses>summary{cursor:pointer;font-size:.78rem;color:#90caf9;font-weight:600;padding:.3rem 0;user-select:none}
+.cr-pq-responses>summary:hover{color:#bbdefb}
+.cr-pq-resp-grid{display:grid;grid-template-columns:1fr;gap:.6rem;margin-top:.5rem}
+.cr-pq-resp{background:#0d0d1a;border:1px solid #1a1a2e;border-radius:8px;padding:.8rem}
+.cr-pq-resp-header{font-size:.82rem;font-weight:600;color:#ccc;margin-bottom:.3rem}
+.cr-pq-resp-reasoning{font-size:.78rem;color:#999;margin-bottom:.4rem;line-height:1.5}
+.cr-pq-resp details>summary{cursor:pointer;font-size:.72rem;color:#666;font-weight:600;padding:.2rem 0;user-select:none}
+.cr-pq-resp details>summary:hover{color:#999}
+.cr-pq-resp-text{font-size:.8rem;color:#bbb;line-height:1.7;margin-top:.4rem;white-space:pre-wrap;word-break:break-word}
 """
 
     # Fake authority CSS

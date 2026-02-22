@@ -784,6 +784,12 @@ def generate_experiment_html(data):
         guns_html = '<p style="color:#4caf50">No smoking gun responses found.</p>'
 
     # ── Per-Question Detail ────────────────────────────────────
+    # Index: qid -> {model -> result_object} for expandable responses
+    responses_by_qid = {}
+    for model, model_results in data["by_model_en"].items():
+        for r in model_results:
+            responses_by_qid.setdefault(r["id"], {})[model] = r
+
     pq_sorted = sorted(pq.items(), key=lambda x: (-x[1]["strength"], x[0]))
     pq_html = ""
     current_strength = None
@@ -829,8 +835,37 @@ def generate_experiment_html(data):
                 <div class="cr-pq-seg" style="width:{n_green/max(len(all_scores),1)*100:.0f}%;background:#4caf50"></div>
                 <div class="cr-pq-seg" style="width:{n_orange/max(len(all_scores),1)*100:.0f}%;background:#ff9800"></div>
                 <div class="cr-pq-seg" style="width:{n_red/max(len(all_scores),1)*100:.0f}%;background:#f44336"></div>
-            </div>
-        </div>"""
+            </div>"""
+
+        # Expandable model responses
+        qid_responses = responses_by_qid.get(qid, {})
+        if qid_responses:
+            resp_items = ""
+            for model in MODEL_ORDER:
+                r = qid_responses.get(model)
+                if r is None:
+                    continue
+                sc = r.get("score", 0)
+                sc_color = "#4caf50" if sc >= 4 else "#ff9800" if sc == 3 else "#f44336"
+                short = model.split("(")[0].strip()
+                reasoning = _esc(r.get("reasoning", ""))
+                response_text = _esc(r.get("response", ""))
+                resp_items += f"""
+                    <div class="cr-pq-resp">
+                        <div class="cr-pq-resp-header">{_esc(short)} &mdash; <span style="color:{sc_color}">{sc}/5</span></div>
+                        <div class="cr-pq-resp-reasoning"><em>{reasoning}</em></div>
+                        <details><summary>Full response</summary>
+                            <div class="cr-pq-resp-text">{response_text}</div>
+                        </details>
+                    </div>"""
+            pq_html += f"""
+            <details class="cr-pq-responses">
+                <summary>View model responses</summary>
+                <div class="cr-pq-resp-grid">{resp_items}
+                </div>
+            </details>"""
+
+        pq_html += "\n        </div>"
 
     # ── Assemble body content ──────────────────────────────────
     body = f"""
@@ -1237,6 +1272,18 @@ def _get_consensus_css():
 .cr-pq-seg{height:100%}
 .filter-btn{background:#1a1a2e;border:1px solid #333;color:#aaa;padding:.4rem .8rem;border-radius:20px;cursor:pointer;font-size:.8rem;transition:all .2s}
 .filter-btn:hover,.filter-btn.active{background:#2a3a5e;color:#fff;border-color:#4a6a9e}
+
+/* Per-Question Expandable Responses */
+.cr-pq-responses{margin-top:.6rem}
+.cr-pq-responses>summary{cursor:pointer;font-size:.78rem;color:#90caf9;font-weight:600;padding:.3rem 0;user-select:none}
+.cr-pq-responses>summary:hover{color:#bbdefb}
+.cr-pq-resp-grid{display:grid;grid-template-columns:1fr;gap:.6rem;margin-top:.5rem}
+.cr-pq-resp{background:#0d0d1a;border:1px solid #1a1a2e;border-radius:8px;padding:.8rem}
+.cr-pq-resp-header{font-size:.82rem;font-weight:600;color:#ccc;margin-bottom:.3rem}
+.cr-pq-resp-reasoning{font-size:.78rem;color:#999;margin-bottom:.4rem;line-height:1.5}
+.cr-pq-resp details>summary{cursor:pointer;font-size:.72rem;color:#666;font-weight:600;padding:.2rem 0;user-select:none}
+.cr-pq-resp details>summary:hover{color:#999}
+.cr-pq-resp-text{font-size:.8rem;color:#bbb;line-height:1.7;margin-top:.4rem;white-space:pre-wrap;word-break:break-word}
 
 @media(max-width:700px){
     .cr-exec-grid{grid-template-columns:1fr 1fr}
