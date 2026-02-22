@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Language Testing — Greece Alignment Risk</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#e0e0e0;line-height:1.6;max-width:1300px;margin:0 auto;padding:2rem}
+h1{font-size:2rem;margin-bottom:.3rem;color:#fff}
+h2{font-size:1.4rem;margin:2.5rem 0 1rem;color:#90caf9;border-bottom:1px solid #333;padding-bottom:.5rem}
+h3{font-size:1.1rem;margin:1.5rem 0 .8rem;color:#aaa}
+.subtitle{color:#888;font-size:.95rem;margin-bottom:1.5rem}
+
+/* Executive Summary */
+.cr-exec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:2rem}
+.cr-exec-card{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}
+.cr-exec-value{font-size:2rem;font-weight:700}
+.cr-exec-label{font-size:.85rem;color:#ccc;margin-top:.3rem;line-height:1.3}
+.cr-exec-sub{font-size:.75rem;color:#666;margin-top:.5rem;line-height:1.3}
+
+/* Methodology */
+.cr-method-box{background:#111;border:1px solid #222;border-radius:10px;padding:1.5rem;font-size:.9rem;color:#bbb}
+.cr-method-box p{line-height:1.6}
+.cr-method-dims{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+.cr-dim{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:1rem}
+.cr-dim-title{font-weight:600;color:#fff;margin-bottom:.3rem;font-size:.9rem}
+.cr-dim-desc{font-size:.82rem;color:#999}
+
+/* Strength Distribution */
+.cr-str-row{display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;flex-wrap:wrap}
+.cr-str-label{width:200px;display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#ccc;flex-shrink:0}
+.cr-str-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;color:#fff;font-weight:700;font-size:.85rem}
+.cr-str-bar-area{flex:1;min-width:100px}
+.cr-str-bar{height:28px;border-radius:4px;display:flex;align-items:center;padding-left:10px;font-size:.82rem;font-weight:600;color:#fff;min-width:30px}
+.cr-str-desc{width:100%;font-size:.78rem;color:#666;margin-left:228px}
+
+/* MAI Cards */
+.cr-mai-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin-bottom:2rem}
+.cr-mai-card{background:#1a1a2e;border-radius:12px;padding:1.5rem;text-align:center;border:1px solid #2a2a4a}
+.cr-mai-model{font-size:.85rem;font-weight:600;color:#90caf9;margin-bottom:.5rem}
+.cr-mai-value{font-size:2.5rem;font-weight:700}
+.cr-mai-label{font-size:.78rem;color:#888;margin-top:.2rem}
+.cr-mai-bar{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-top:.8rem;background:#0a0a0a}
+.cr-mai-seg{height:100%;transition:width .3s}
+.cr-mai-legend{display:flex;justify-content:center;gap:.8rem;margin-top:.5rem;font-size:.75rem;font-weight:600}
+.cr-mai-sub{font-size:.72rem;color:#555;margin-top:.3rem}
+
+/* Risk Matrix */
+.cr-rm-table{width:100%;border-collapse:collapse;margin:1rem 0}
+.cr-rm-th{background:#1a1a2e;padding:.6rem;font-size:.8rem;color:#aaa;border:1px solid #222;text-align:center}
+.cr-rm-cell{padding:.6rem;border:1px solid #222;text-align:center;vertical-align:middle}
+.cr-rm-strength{text-align:left;font-weight:600;font-size:.85rem;white-space:nowrap;padding:.6rem;border:1px solid #222;color:#ccc}
+.cr-rm-stack{display:flex;height:16px;border-radius:3px;overflow:hidden;margin-bottom:.3rem;background:#0a0a0a}
+.cr-rm-seg{height:100%}
+.cr-rm-nums{font-size:.72rem;color:#888}
+.cr-rm-legend{font-size:.78rem;color:#666;margin-top:.5rem}
+
+/* Language MAI Heatmap */
+.cr-lm-table{width:100%;border-collapse:collapse;margin:1rem 0}
+.cr-lm-table th{background:#1a1a2e;padding:.5rem;font-size:.75rem;color:#aaa;border:1px solid #222;text-align:center}
+.cr-lm-cell{padding:.5rem;border:1px solid #222;text-align:center;font-size:.85rem;font-weight:600;color:#fff}
+.cr-lm-model{text-align:left;font-weight:600;font-size:.82rem;color:#90caf9;padding:.5rem;border:1px solid #222;white-space:nowrap}
+.cr-lm-delta{font-size:.68rem;font-weight:600;margin-top:.1rem}
+
+/* Smoking Guns */
+.cr-gun-card{background:#111;border:1px solid #222;border-left:3px solid #f44336;border-radius:0 8px 8px 0;padding:1rem;margin-bottom:.8rem}
+.cr-gun-header{display:flex;gap:.8rem;align-items:center;margin-bottom:.4rem;flex-wrap:wrap}
+.cr-gun-qid{font-weight:700;color:#fff;font-size:.85rem}
+.cr-gun-cat{font-size:.72rem;color:#888;background:#1a1a2e;padding:.15rem .5rem;border-radius:10px}
+.cr-gun-model{font-size:.82rem;font-weight:600;color:#90caf9}
+.cr-gun-score{font-size:.82rem;font-weight:700}
+.cr-gun-query{font-size:.9rem;color:#ddd;margin-bottom:.4rem}
+.cr-gun-expected{font-size:.8rem;color:#4caf50;margin-bottom:.3rem}
+.cr-gun-reasoning{font-size:.78rem;color:#999}
+
+/* Per-Question Detail */
+.cr-pq-filters{margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:.5rem}
+.cr-pq-group{margin-top:2rem;margin-bottom:1rem;padding-bottom:.3rem;border-bottom:1px solid #333}
+.cr-pq-card{background:#111;border:1px solid #222;border-radius:8px;padding:1rem;margin-bottom:.6rem}
+.cr-pq-header{display:flex;gap:.6rem;align-items:center;margin-bottom:.4rem;flex-wrap:wrap}
+.cr-pq-strength{font-size:.72rem;font-weight:700;padding:.15rem .5rem;border-radius:10px}
+.cr-pq-cat{font-size:.72rem;color:#888;background:#1a1a2e;padding:.15rem .5rem;border-radius:10px}
+.cr-pq-risk{font-size:.72rem;font-weight:700;color:#f44336;background:#f4433622;padding:.15rem .5rem;border-radius:10px}
+.cr-pq-question{font-size:.88rem;color:#ddd;margin-bottom:.5rem}
+.cr-pq-pills{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.4rem}
+.cr-pq-pill{font-size:.68rem;color:#fff;padding:.15rem .5rem;border-radius:10px;font-weight:600}
+.cr-pq-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:#0a0a0a}
+.cr-pq-seg{height:100%}
+.filter-btn{background:#1a1a2e;border:1px solid #333;color:#aaa;padding:.4rem .8rem;border-radius:20px;cursor:pointer;font-size:.8rem;transition:all .2s}
+.filter-btn:hover,.filter-btn.active{background:#2a3a5e;color:#fff;border-color:#4a6a9e}
+
+@media(max-width:700px){
+    .cr-exec-grid{grid-template-columns:1fr 1fr}
+    .cr-mai-grid{grid-template-columns:1fr}
+    .cr-method-dims{grid-template-columns:1fr}
+    .cr-str-row{flex-direction:column;align-items:flex-start}
+    .cr-str-desc{margin-left:0}
+}
+
+</style></head><body>
+
+<h1>Language Testing — Greece Alignment Risk</h1>
+<p class="subtitle">5 models &middot; 13 languages &middot; MAI on strength ≥4 questions &middot; 2026-02-22 02:33</p>
+
+
+<div class="cr-method-box">
+    <h3 style="color:#ffab40;margin-bottom:.8rem">How Language Affects Manufactured Ambiguity</h3>
+    <p>When models are asked the same questions in different languages, does the language of the query
+    affect how willing they are to acknowledge established facts? This analysis measures the
+    <strong>Manufactured Ambiguity Index (MAI)</strong> across 13 languages for all 5 models,
+    focusing on questions where Greece's position has strong evidential support (strength ≥4).</p>
+    <p style="margin-top:.6rem">A higher MAI in a non-English language means the model hedges <em>more</em>
+    on settled facts when asked in that language.</p>
+</div>
+
+<h2>Language MAI Heatmap</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">MAI% per language for strength ≥4 questions. Higher = more manufactured ambiguity. Which languages make models hedge more on settled facts?</p>
+
+    <table class="cr-lm-table">
+        <tr><th>Model</th><th>🇬🇧</th><th>🇨🇳</th><th>🇪🇸</th><th>🇮🇳</th><th>🇧🇷</th><th>🇧🇩</th><th>🇷🇺</th><th>🇯🇵</th><th>🇵🇰</th><th>🇻🇳</th><th>🇹🇷</th><th>🇸🇦</th><th>🇫🇷</th></tr>
+        <tr><td class="cr-lm-model">ChatGPT</td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4703703703703703)">22%</td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5861111111111111)">29%<div class="cr-lm-delta" style="color:#f44336">+6.9</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4472222222222223)">21%<div class="cr-lm-delta" style="color:#888">-1.4</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.562962962962963)">28%<div class="cr-lm-delta" style="color:#f44336">+5.6</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4703703703703703)">22%<div class="cr-lm-delta" style="color:#888">+0.0</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4703703703703703)">22%<div class="cr-lm-delta" style="color:#888">+0.0</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.37777777777777777)">17%<div class="cr-lm-delta" style="color:#4caf50">-5.6</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.49351851851851847)">24%<div class="cr-lm-delta" style="color:#ff9800">+1.4</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5398148148148149)">26%<div class="cr-lm-delta" style="color:#f44336">+4.2</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4703703703703703)">22%<div class="cr-lm-delta" style="color:#888">+0.0</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.6787037037037037)">35%<div class="cr-lm-delta" style="color:#f44336">+12.5</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.5166666666666667)">25%<div class="cr-lm-delta" style="color:#f44336">+2.8</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4703703703703703)">22%<div class="cr-lm-delta" style="color:#888">+0.0</div></td></tr><tr><td class="cr-lm-model">Claude</td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.3314814814814815)">14%</td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.35462962962962963)">15%<div class="cr-lm-delta" style="color:#ff9800">+1.4</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.3314814814814815)">14%<div class="cr-lm-delta" style="color:#888">+0.0</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4703703703703703)">22%<div class="cr-lm-delta" style="color:#f44336">+8.3</div></td><td class="cr-lm-cell" style="background:rgba(76,175,80,0.26203703703703707)">10%<div class="cr-lm-delta" style="color:#4caf50">-4.2</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.42407407407407416)">19%<div class="cr-lm-delta" style="color:#f44336">+5.6</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.37777777777777777)">17%<div class="cr-lm-delta" style="color:#f44336">+2.8</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.2851851851851852)">11%<div class="cr-lm-delta" style="color:#4caf50">-2.8</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.30833333333333335)">12%<div class="cr-lm-delta" style="color:#888">-1.4</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.42407407407407416)">19%<div class="cr-lm-delta" style="color:#f44336">+5.6</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5398148148148149)">26%<div class="cr-lm-delta" style="color:#f44336">+12.5</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.42407407407407416)">19%<div class="cr-lm-delta" style="color:#f44336">+5.6</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.30833333333333335)">12%<div class="cr-lm-delta" style="color:#888">-1.4</div></td></tr><tr><td class="cr-lm-model">Qwen 3.5 Plus</td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.2851851851851852)">11%</td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.3314814814814815)">14%<div class="cr-lm-delta" style="color:#f44336">+2.8</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.30833333333333335)">12%<div class="cr-lm-delta" style="color:#ff9800">+1.4</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.2851851851851852)">11%<div class="cr-lm-delta" style="color:#888">+0.0</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.2851851851851852)">11%<div class="cr-lm-delta" style="color:#888">+0.0</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.35462962962962963)">15%<div class="cr-lm-delta" style="color:#f44336">+4.2</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.30833333333333335)">12%<div class="cr-lm-delta" style="color:#ff9800">+1.4</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4009259259259259)">18%<div class="cr-lm-delta" style="color:#f44336">+6.9</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.296078431372549)">12%<div class="cr-lm-delta" style="color:#ff9800">+0.7</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.2851851851851852)">11%<div class="cr-lm-delta" style="color:#888">+0.0</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.562962962962963)">28%<div class="cr-lm-delta" style="color:#f44336">+16.7</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.30833333333333335)">12%<div class="cr-lm-delta" style="color:#ff9800">+1.4</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.2851851851851852)">11%<div class="cr-lm-delta" style="color:#888">+0.0</div></td></tr><tr><td class="cr-lm-model">DeepSeek v3.2</td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.35462962962962963)">15%</td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5398148148148149)">26%<div class="cr-lm-delta" style="color:#f44336">+11.1</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4703703703703703)">22%<div class="cr-lm-delta" style="color:#f44336">+6.9</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.562962962962963)">28%<div class="cr-lm-delta" style="color:#f44336">+12.5</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.37777777777777777)">17%<div class="cr-lm-delta" style="color:#ff9800">+1.4</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.562962962962963)">28%<div class="cr-lm-delta" style="color:#f44336">+12.5</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.35462962962962963)">15%<div class="cr-lm-delta" style="color:#888">+0.0</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.49351851851851847)">24%<div class="cr-lm-delta" style="color:#f44336">+8.3</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4472222222222223)">21%<div class="cr-lm-delta" style="color:#f44336">+5.6</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.49351851851851847)">24%<div class="cr-lm-delta" style="color:#f44336">+8.3</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.8407407407407407)">44%<div class="cr-lm-delta" style="color:#f44336">+29.2</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.2851851851851852)">11%<div class="cr-lm-delta" style="color:#4caf50">-4.2</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5861111111111111)">29%<div class="cr-lm-delta" style="color:#f44336">+13.9</div></td></tr><tr><td class="cr-lm-model">Gemini 2.5 Pro</td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5398148148148149)">26%</td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.5166666666666667)">25%<div class="cr-lm-delta" style="color:#888">-1.4</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4703703703703703)">22%<div class="cr-lm-delta" style="color:#4caf50">-4.2</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5861111111111111)">29%<div class="cr-lm-delta" style="color:#f44336">+2.8</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.49351851851851847)">24%<div class="cr-lm-delta" style="color:#4caf50">-2.8</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5861111111111111)">29%<div class="cr-lm-delta" style="color:#f44336">+2.8</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.5166666666666667)">25%<div class="cr-lm-delta" style="color:#888">-1.4</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.49351851851851847)">24%<div class="cr-lm-delta" style="color:#4caf50">-2.8</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.35462962962962963)">15%<div class="cr-lm-delta" style="color:#4caf50">-11.1</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.6555555555555554)">33%<div class="cr-lm-delta" style="color:#f44336">+6.9</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.7712962962962963)">40%<div class="cr-lm-delta" style="color:#f44336">+13.9</div></td><td class="cr-lm-cell" style="background:rgba(255,152,0,0.4472222222222223)">21%<div class="cr-lm-delta" style="color:#4caf50">-5.6</div></td><td class="cr-lm-cell" style="background:rgba(244,67,54,0.5861111111111111)">29%<div class="cr-lm-delta" style="color:#f44336">+2.8</div></td></tr>
+    </table>
+    <div class="cr-rm-legend">Values show MAI% (Manufactured Ambiguity Index) for strength ≥4 questions. Delta from English shown below.</div>
+    
+
+<h2>Per-Model Language Vulnerability</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">Which language causes each model to hedge the most on established facts?</p>
+<div class="cr-mai-grid">
+        <div class="cr-mai-card">
+            <div class="cr-mai-model">ChatGPT</div>
+            <div style="margin:.6rem 0">
+                <div style="font-size:.82rem;color:#888">English MAI</div>
+                <div style="font-size:1.4rem;font-weight:700;color:#ff9800">22%</div>
+            </div>
+            <div style="margin-bottom:.4rem">
+                <span style="color:#f44336;font-weight:600">Worst:</span>
+                <span>🇹🇷 Turkish</span>
+                <span style="color:#f44336;font-weight:700"> 35%</span>
+                <span style="color:#f44336;font-size:.78rem"> (+12pp)</span>
+            </div>
+            <div>
+                <span style="color:#4caf50;font-weight:600">Best:</span>
+                <span>🇷🇺 Russian</span>
+                <span style="color:#4caf50;font-weight:700"> 17%</span>
+            </div>
+        </div>
+        <div class="cr-mai-card">
+            <div class="cr-mai-model">Claude</div>
+            <div style="margin:.6rem 0">
+                <div style="font-size:.82rem;color:#888">English MAI</div>
+                <div style="font-size:1.4rem;font-weight:700;color:#ff9800">14%</div>
+            </div>
+            <div style="margin-bottom:.4rem">
+                <span style="color:#f44336;font-weight:600">Worst:</span>
+                <span>🇹🇷 Turkish</span>
+                <span style="color:#f44336;font-weight:700"> 26%</span>
+                <span style="color:#f44336;font-size:.78rem"> (+12pp)</span>
+            </div>
+            <div>
+                <span style="color:#4caf50;font-weight:600">Best:</span>
+                <span>🇧🇷 Portuguese</span>
+                <span style="color:#4caf50;font-weight:700"> 10%</span>
+            </div>
+        </div>
+        <div class="cr-mai-card">
+            <div class="cr-mai-model">Qwen 3.5 Plus</div>
+            <div style="margin:.6rem 0">
+                <div style="font-size:.82rem;color:#888">English MAI</div>
+                <div style="font-size:1.4rem;font-weight:700;color:#ff9800">11%</div>
+            </div>
+            <div style="margin-bottom:.4rem">
+                <span style="color:#f44336;font-weight:600">Worst:</span>
+                <span>🇹🇷 Turkish</span>
+                <span style="color:#f44336;font-weight:700"> 28%</span>
+                <span style="color:#f44336;font-size:.78rem"> (+17pp)</span>
+            </div>
+            <div>
+                <span style="color:#4caf50;font-weight:600">Best:</span>
+                <span>🇫🇷 French</span>
+                <span style="color:#4caf50;font-weight:700"> 11%</span>
+            </div>
+        </div>
+        <div class="cr-mai-card">
+            <div class="cr-mai-model">DeepSeek v3.2</div>
+            <div style="margin:.6rem 0">
+                <div style="font-size:.82rem;color:#888">English MAI</div>
+                <div style="font-size:1.4rem;font-weight:700;color:#ff9800">15%</div>
+            </div>
+            <div style="margin-bottom:.4rem">
+                <span style="color:#f44336;font-weight:600">Worst:</span>
+                <span>🇹🇷 Turkish</span>
+                <span style="color:#f44336;font-weight:700"> 44%</span>
+                <span style="color:#f44336;font-size:.78rem"> (+29pp)</span>
+            </div>
+            <div>
+                <span style="color:#4caf50;font-weight:600">Best:</span>
+                <span>🇸🇦 Arabic</span>
+                <span style="color:#4caf50;font-weight:700"> 11%</span>
+            </div>
+        </div>
+        <div class="cr-mai-card">
+            <div class="cr-mai-model">Gemini 2.5 Pro</div>
+            <div style="margin:.6rem 0">
+                <div style="font-size:.82rem;color:#888">English MAI</div>
+                <div style="font-size:1.4rem;font-weight:700;color:#ff9800">26%</div>
+            </div>
+            <div style="margin-bottom:.4rem">
+                <span style="color:#f44336;font-weight:600">Worst:</span>
+                <span>🇹🇷 Turkish</span>
+                <span style="color:#f44336;font-weight:700"> 40%</span>
+                <span style="color:#f44336;font-size:.78rem"> (+14pp)</span>
+            </div>
+            <div>
+                <span style="color:#4caf50;font-weight:600">Best:</span>
+                <span>🇵🇰 Punjabi</span>
+                <span style="color:#4caf50;font-weight:700"> 15%</span>
+            </div>
+        </div></div>
+
+
+        <h2>Turkish Language Deep-Dive</h2>
+        <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Turkish is consistently the worst-performing language across all 5 models. When asked about Greek topics in Turkish, models manufacture significantly more ambiguity on established facts.</p>
+        <div class="cr-str-row" style="margin-bottom:.5rem">
+                <div class="cr-str-label" style="width:150px">DeepSeek v3.2</div>
+                <div class="cr-str-bar-area">
+                    <div class="cr-str-bar" style="width:66.66666666666666%;background:#f44336">44%</div>
+                </div>
+                <div style="width:80px;font-size:.82rem;color:#f44336;font-weight:600;text-align:right">+29.2pp vs EN</div>
+            </div><div class="cr-str-row" style="margin-bottom:.5rem">
+                <div class="cr-str-label" style="width:150px">Gemini 2.5 Pro</div>
+                <div class="cr-str-bar-area">
+                    <div class="cr-str-bar" style="width:60.41666666666667%;background:#f44336">40%</div>
+                </div>
+                <div style="width:80px;font-size:.82rem;color:#f44336;font-weight:600;text-align:right">+13.9pp vs EN</div>
+            </div><div class="cr-str-row" style="margin-bottom:.5rem">
+                <div class="cr-str-label" style="width:150px">ChatGPT</div>
+                <div class="cr-str-bar-area">
+                    <div class="cr-str-bar" style="width:52.08333333333333%;background:#f44336">35%</div>
+                </div>
+                <div style="width:80px;font-size:.82rem;color:#f44336;font-weight:600;text-align:right">+12.5pp vs EN</div>
+            </div><div class="cr-str-row" style="margin-bottom:.5rem">
+                <div class="cr-str-label" style="width:150px">Qwen 3.5 Plus</div>
+                <div class="cr-str-bar-area">
+                    <div class="cr-str-bar" style="width:41.66666666666667%;background:#f44336">28%</div>
+                </div>
+                <div style="width:80px;font-size:.82rem;color:#f44336;font-weight:600;text-align:right">+16.7pp vs EN</div>
+            </div><div class="cr-str-row" style="margin-bottom:.5rem">
+                <div class="cr-str-label" style="width:150px">Claude</div>
+                <div class="cr-str-bar-area">
+                    <div class="cr-str-bar" style="width:39.583333333333336%;background:#f44336">26%</div>
+                </div>
+                <div style="width:80px;font-size:.82rem;color:#f44336;font-weight:600;text-align:right">+12.5pp vs EN</div>
+            </div>
+        
+
+
+</body></html>

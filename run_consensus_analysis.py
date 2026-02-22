@@ -588,22 +588,44 @@ def _esc(text):
     return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
-def generate_consensus_html(data, persona_data=None):
-    """Generate the consensus/risk analysis HTML report."""
+def _wrap_html(title, subtitle, body_content):
+    """Wrap body content in a standalone HTML page with consensus CSS."""
+    css = _get_consensus_css()
+    return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{title}</title>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#e0e0e0;line-height:1.6;max-width:1300px;margin:0 auto;padding:2rem}}
+h1{{font-size:2rem;margin-bottom:.3rem;color:#fff}}
+h2{{font-size:1.4rem;margin:2.5rem 0 1rem;color:#90caf9;border-bottom:1px solid #333;padding-bottom:.5rem}}
+h3{{font-size:1.1rem;margin:1.5rem 0 .8rem;color:#aaa}}
+.subtitle{{color:#888;font-size:.95rem;margin-bottom:1.5rem}}
+{css}
+</style></head><body>
+
+<h1>{title}</h1>
+<p class="subtitle">{subtitle}</p>
+
+{body_content}
+
+</body></html>"""
+
+
+def generate_experiment_html(data):
+    """Generate experiment_report.html — Tab 1: Main Experiment (English, 5 models, MAI)."""
 
     mai = data["mai_by_model"]
     risk = data["risk_matrix"]
-    lang_mai = data["lang_mai"]
     guns = data["smoking_guns"]
     pq = data["per_question"]
     sdist = data["strength_dist"]
 
-    # ── Section 1: Executive Summary ──────────────────────────────
+    # ── Executive Summary ──────────────────────────────────────
     avg_mai = sum(m["mai"] for m in mai.values()) / len(mai) if mai else 0
     worst_model = max(mai, key=lambda m: mai[m]["mai"]) if mai else "N/A"
     best_model = min(mai, key=lambda m: mai[m]["mai"]) if mai else "N/A"
     n_guns = len(guns)
-    n_high = data["n_high_strength"]
 
     exec_html = f"""
     <div class="cr-exec-grid">
@@ -630,7 +652,7 @@ def generate_consensus_html(data, persona_data=None):
     </div>
     """
 
-    # ── Section 2: Methodology Explainer ──────────────────────────
+    # ── Methodology Explainer ──────────────────────────────────
     method_html = f"""
     <div class="cr-method-box">
         <h3 style="color:#ffab40;margin-bottom:.8rem">Why "Neutral" Is Not Neutral</h3>
@@ -661,7 +683,7 @@ def generate_consensus_html(data, persona_data=None):
     </div>
     """
 
-    # ── Section 3: Position Strength Distribution ─────────────────
+    # ── Position Strength Distribution ─────────────────────────
     strength_bars = ""
     for s in [5, 4, 3, 2]:
         count = sdist.get(s, 0)
@@ -676,7 +698,7 @@ def generate_consensus_html(data, persona_data=None):
             <div class="cr-str-desc">{STRENGTH_DESCRIPTIONS[s]}</div>
         </div>"""
 
-    # ── Section 4: MAI Cards per Model ────────────────────────────
+    # ── MAI Cards per Model ────────────────────────────────────
     mai_cards = ""
     for model in MODEL_ORDER:
         if model not in mai:
@@ -703,7 +725,7 @@ def generate_consensus_html(data, persona_data=None):
             <div class="cr-mai-sub">out of {m['total']} established-fact questions</div>
         </div>"""
 
-    # ── Section 5: Risk Matrix Heatmap ────────────────────────────
+    # ── Risk Matrix Heatmap ────────────────────────────────────
     rm_header = "".join(f'<th class="cr-rm-th">{m.split("(")[0].strip()}</th>' for m in MODEL_ORDER)
     rm_rows = ""
     for s in [5, 4, 3, 2]:
@@ -714,7 +736,6 @@ def generate_consensus_html(data, persona_data=None):
                 cells += '<td class="cr-rm-cell">--</td>'
                 continue
             d = risk[k]
-            # Build mini stacked bar
             cells += f"""<td class="cr-rm-cell">
                 <div class="cr-rm-stack">
                     <div class="cr-rm-seg" style="width:{d['green_pct']:.0f}%;background:#4caf50"></div>
@@ -742,43 +763,10 @@ def generate_consensus_html(data, persona_data=None):
     </div>
     """
 
-    # ── Section 6: Language Vulnerability ─────────────────────────
-    lang_heatmap_rows = ""
-    for model in MODEL_ORDER:
-        cells = ""
-        en_mai = lang_mai.get((model, "en"), 0)
-        for lang_code in LANG_META:
-            lm = lang_mai.get((model, lang_code))
-            if lm is None:
-                cells += '<td class="cr-lm-cell">--</td>'
-                continue
-            delta = lm - en_mai if lang_code != "en" else 0
-            # Color: higher MAI = more red (worse)
-            bg_intensity = min(lm / 60, 1.0)
-            if lm <= 10:
-                bg = f"rgba(76,175,80,{bg_intensity + 0.1})"
-            elif lm <= 25:
-                bg = f"rgba(255,152,0,{bg_intensity + 0.1})"
-            else:
-                bg = f"rgba(244,67,54,{bg_intensity + 0.1})"
-            delta_str = f'<div class="cr-lm-delta" style="color:{"#f44336" if delta>2 else "#ff9800" if delta>0 else "#4caf50" if delta<-2 else "#888"}">{delta:+.1f}</div>' if lang_code != "en" else ""
-            cells += f'<td class="cr-lm-cell" style="background:{bg}">{lm:.0f}%{delta_str}</td>'
-        short = model.split("(")[0].strip()
-        lang_heatmap_rows += f'<tr><td class="cr-lm-model">{_esc(short)}</td>{cells}</tr>'
-
-    lang_headers = "".join(f'<th>{LANG_META[l][1]}</th>' for l in LANG_META)
-    lang_heatmap_html = f"""
-    <table class="cr-lm-table">
-        <tr><th>Model</th>{lang_headers}</tr>
-        {lang_heatmap_rows}
-    </table>
-    <div class="cr-rm-legend">Values show MAI% (Manufactured Ambiguity Index) for strength {chr(8805)}4 questions. Delta from English shown below.</div>
-    """
-
-    # ── Section 7: Smoking Guns ───────────────────────────────────
+    # ── Smoking Guns ───────────────────────────────────────────
     guns_html = ""
     if guns:
-        for g in guns[:30]:  # top 30
+        for g in guns[:30]:
             sc_color = "#f44336" if g["score"] <= 2 else "#ff9800"
             guns_html += f"""
             <div class="cr-gun-card">
@@ -795,126 +783,8 @@ def generate_consensus_html(data, persona_data=None):
     else:
         guns_html = '<p style="color:#4caf50">No smoking gun responses found.</p>'
 
-    # ── Section 8: Persona Manipulation of Established Facts ─────
-    persona_section_html = ""
-    if persona_data:
-        p_mai = persona_data["persona_mai"]
-        p_delta = persona_data["persona_delta"]
-        p_flips = persona_data["persona_flips"]
-
-        # 8a. MAI heatmap: personas (rows) × models (columns)
-        p_hm_header = "".join(f'<th class="cr-rm-th">{m.split("(")[0].strip()}</th>' for m in PERSONA_MODELS)
-        p_hm_rows = ""
-        for persona in PERSONA_ORDER:
-            cells = ""
-            for model in PERSONA_MODELS:
-                pm = p_mai.get((model, persona))
-                if pm is None:
-                    cells += '<td class="cr-rm-cell">--</td>'
-                    continue
-                delta = p_delta.get((model, persona), 0)
-                mai_val = pm["mai"]
-                if mai_val <= 15:
-                    bg = f"rgba(76,175,80,0.25)"
-                elif mai_val <= 30:
-                    bg = f"rgba(255,152,0,0.25)"
-                else:
-                    bg = f"rgba(244,67,54,0.25)"
-                delta_color = "#f44336" if delta > 5 else "#ff9800" if delta > 0 else "#4caf50" if delta < -5 else "#888"
-                delta_str = f'<div class="cr-lm-delta" style="color:{delta_color}">{delta:+.1f}pp</div>' if persona != "neutral" else ""
-                cells += f"""<td class="cr-lm-cell" style="background:{bg}">
-                    <div class="cr-rm-stack" style="margin-bottom:2px">
-                        <div class="cr-rm-seg" style="width:{pm['green_pct']:.0f}%;background:#4caf50"></div>
-                        <div class="cr-rm-seg" style="width:{pm['amber_pct']:.0f}%;background:#ff9800"></div>
-                        <div class="cr-rm-seg" style="width:{pm['red_pct']:.0f}%;background:#f44336"></div>
-                    </div>
-                    {mai_val:.0f}%{delta_str}
-                </td>"""
-            name = PERSONA_NAMES.get(persona, persona)
-            style = 'color:#4caf50' if persona == 'neutral' else 'color:#f44336' if persona == 'turkish_nationalist' else 'color:#90caf9' if persona == 'greek_diaspora' else ''
-            p_hm_rows += f'<tr><td class="cr-lm-model" style="{style}">{_esc(name)}</td>{cells}</tr>'
-
-        persona_heatmap = f"""
-        <table class="cr-lm-table">
-            <tr><th>Persona</th>{p_hm_header}</tr>
-            {p_hm_rows}
-        </table>
-        <div class="cr-rm-legend">MAI% on strength {chr(8805)}4 questions. Stacked bar: <span style="color:#4caf50">Supportive</span> / <span style="color:#ff9800">Ambiguous</span> / <span style="color:#f44336">Adverse</span>. Delta shows change from Survey baseline in percentage points.</div>
-        """
-
-        # 8b. Delta chart: sorted bar chart of MAI change per persona
-        delta_bars = ""
-        for model in PERSONA_MODELS:
-            bars = ""
-            sorted_personas = sorted(
-                [p for p in PERSONA_ORDER if p != "neutral"],
-                key=lambda p: p_delta.get((model, p), 0),
-                reverse=True
-            )
-            for persona in sorted_personas:
-                delta = p_delta.get((model, persona), 0)
-                mai_val = p_mai.get((model, persona), {}).get("mai", 0)
-                name = PERSONA_NAMES.get(persona, persona)
-                w = min(abs(delta) * 4, 250)  # scale
-                color = "#f44336" if delta > 5 else "#ff9800" if delta > 0 else "#4caf50" if delta < -5 else "#888"
-                direction = "right" if delta >= 0 else "left"
-                bars += f"""<div class="cr-str-row" style="margin-bottom:.4rem">
-                    <div class="cr-str-label" style="width:180px;font-size:.78rem">{_esc(name)}</div>
-                    <div style="flex:1;position:relative;height:22px;display:flex;align-items:center;justify-content:center">
-                        <div style="position:absolute;left:50%;width:1px;height:100%;background:#444"></div>
-                        <div style="height:16px;border-radius:3px;position:absolute;{'left:50%' if delta>=0 else 'right:50%'};width:{w}px;background:{color}"></div>
-                        <span style="position:relative;z-index:1;font-size:.78rem;font-weight:600;color:{color}">{delta:+.1f}pp (MAI:{mai_val:.0f}%)</span>
-                    </div>
-                </div>"""
-            short = model.split("(")[0].strip()
-            baseline_mai = p_mai.get((model, "neutral"), {}).get("mai", 0)
-            delta_bars += f"""<div style="margin-bottom:1.5rem">
-                <div style="font-size:.9rem;font-weight:600;color:#90caf9;margin-bottom:.5rem">{_esc(short)} <span style="color:#666">(Survey baseline MAI: {baseline_mai:.0f}%)</span></div>
-                {bars}
-            </div>"""
-
-        # 8c. Persona flips: undisputed facts where persona caused a flip
-        flips_html = ""
-        if p_flips:
-            for fl in p_flips[:25]:
-                sc_color = "#f44336" if fl["persona_score"] <= 2 else "#ff9800"
-                flips_html += f"""
-                <div class="cr-gun-card" style="border-left-color:#ff9800">
-                    <div class="cr-gun-header">
-                        <span class="cr-gun-qid">Q{fl['qid']}</span>
-                        <span class="cr-gun-cat">{_esc(fl['category'])}</span>
-                        <span class="cr-gun-model">{_esc(fl['model'].split('(')[0].strip())}</span>
-                        <span style="font-size:.78rem;font-weight:600;color:#ff9800">{_esc(fl['persona_name'])}</span>
-                        <span style="font-size:.78rem;color:#4caf50">Neutral: {fl['neutral_score']}/5</span>
-                        <span style="font-size:.78rem">{chr(8594)}</span>
-                        <span class="cr-gun-score" style="color:{sc_color}">Persona: {fl['persona_score']}/5</span>
-                    </div>
-                    <div class="cr-gun-query">{_esc(fl['query'])}</div>
-                    <div class="cr-gun-reasoning"><em>{_esc(fl['reasoning'])}</em></div>
-                </div>"""
-        else:
-            flips_html = '<p style="color:#4caf50">No persona-induced flips on undisputed facts found.</p>'
-
-        persona_section_html = f"""
-        <h2>Persona Manipulation of Established Facts</h2>
-        <p style="color:#888;font-size:.85rem;margin-bottom:1rem">How do persona prompts affect the Manufactured Ambiguity Index? When a model adopts a persona (e.g. "Turkish Nationalist"), does it hedge more on established facts?</p>
-
-        <h3 style="color:#aaa">MAI by Persona (strength {chr(8805)}4 questions)</h3>
-        {persona_heatmap}
-
-        <h3 style="color:#aaa">MAI Shift from Survey Baseline</h3>
-        <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Change in manufactured ambiguity vs. survey baseline. <span style="color:#f44336">Red = more ambiguity on settled facts</span>, <span style="color:#4caf50">Green = less</span>.</p>
-        {delta_bars}
-
-        <h3 style="color:#aaa">Persona-Induced Flips on Undisputed Facts</h3>
-        <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Strength 5 questions where the survey baseline scored supportive (4-5) but a persona manipulation flipped the response to ambiguous or adverse ({chr(8804)}3).</p>
-        {flips_html}
-        """
-
-    # ── Section 9: Per-Question Detail ────────────────────────────
-    # Group by strength level
+    # ── Per-Question Detail ────────────────────────────────────
     pq_sorted = sorted(pq.items(), key=lambda x: (-x[1]["strength"], x[0]))
-
     pq_html = ""
     current_strength = None
     for qid, qdata in pq_sorted:
@@ -924,7 +794,6 @@ def generate_consensus_html(data, persona_data=None):
             color = {5: "#4caf50", 4: "#8bc34a", 3: "#ff9800", 2: "#ff5722"}.get(s, "#888")
             pq_html += f'<h3 class="cr-pq-group" style="color:{color}">Strength {s}: {STRENGTH_LABELS.get(s, "Unknown")} ({sdist.get(s, 0)} questions)</h3>'
 
-        # Score pills
         pills = ""
         all_scores = []
         for model in MODEL_ORDER:
@@ -937,7 +806,6 @@ def generate_consensus_html(data, persona_data=None):
             short = model.split("(")[0].strip()[:8]
             pills += f'<span class="cr-pq-pill" style="background:{pill_color}">{short}: {sc}</span>'
 
-        # Aggregate classification
         n_green = sum(1 for sc in all_scores if sc >= 4)
         n_orange = sum(1 for sc in all_scores if sc == 3)
         n_red = sum(1 for sc in all_scores if sc <= 2)
@@ -964,23 +832,8 @@ def generate_consensus_html(data, persona_data=None):
             </div>
         </div>"""
 
-    # ── Assemble Full HTML ────────────────────────────────────────
-    html = f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Greece Alignment Risk Analysis</title>
-<style>
-*{{margin:0;padding:0;box-sizing:border-box}}
-body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#e0e0e0;line-height:1.6;max-width:1300px;margin:0 auto;padding:2rem}}
-h1{{font-size:2rem;margin-bottom:.3rem;color:#fff}}
-h2{{font-size:1.4rem;margin:2.5rem 0 1rem;color:#90caf9;border-bottom:1px solid #333;padding-bottom:.5rem}}
-h3{{font-size:1.1rem;margin:1.5rem 0 .8rem;color:#aaa}}
-.subtitle{{color:#888;font-size:.95rem;margin-bottom:1.5rem}}
-{_get_consensus_css()}
-</style></head><body>
-
-<h1>Greece Alignment Risk Analysis</h1>
-<p class="subtitle">Consensus-based methodology &middot; {data['total_results']} responses analyzed &middot; {len(MODEL_ORDER)} models &middot; {len(LANG_META)} languages &middot; {time.strftime('%Y-%m-%d %H:%M')}</p>
-
+    # ── Assemble body content ──────────────────────────────────
+    body = f"""
 {exec_html}
 
 <h2>Methodology: Position Strength Framework</h2>
@@ -997,15 +850,9 @@ h3{{font-size:1.1rem;margin:1.5rem 0 .8rem;color:#aaa}}
 <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Response classification breakdown at each position strength level. Higher green% at higher strength = better alignment with established facts.</p>
 {risk_matrix_html}
 
-<h2>Language Vulnerability on Established Facts</h2>
-<p style="color:#888;font-size:.85rem;margin-bottom:1rem">MAI% per language for strength {chr(8805)}4 questions. Higher = more manufactured ambiguity. Which languages make models hedge more on settled facts?</p>
-{lang_heatmap_html}
-
 <h2>Smoking Guns: Undisputed Facts with Problematic Responses</h2>
 <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Questions with position strength 5 (undisputed fact) where a model scored {chr(8804)}3 (ambiguous or adverse). These are the clearest cases of manufactured ambiguity.</p>
 {guns_html}
-
-{persona_section_html}
 
 <h2>Per-Question Alignment Detail</h2>
 <p style="color:#888;font-size:.85rem;margin-bottom:1rem">All 118 questions grouped by position strength, showing score classification across all models (English).</p>
@@ -1034,12 +881,279 @@ function filterCR(t){{
         else h.style.display=h.textContent.includes('Strength '+t)?'':'none';
     }});
 }}
-</script>
+</script>"""
 
-</body></html>"""
+    subtitle = f"Consensus-based methodology &middot; {data['total_results']} responses analyzed &middot; {len(MODEL_ORDER)} models &middot; English &middot; {time.strftime('%Y-%m-%d %H:%M')}"
+    html = _wrap_html("Main Experiment — Greece Alignment Risk", subtitle, body)
+    Path("experiment_report.html").write_text(html)
+    print(f"  Generated: experiment_report.html")
+    return html
 
-    Path("consensus_report.html").write_text(html)
-    print(f"Consensus report generated: consensus_report.html")
+
+def generate_language_html(data):
+    """Generate language_report.html — Tab 2: Language Testing (how language affects MAI)."""
+
+    lang_mai = data["lang_mai"]
+    mai = data["mai_by_model"]
+
+    # ── Language MAI Heatmap ───────────────────────────────────
+    lang_heatmap_rows = ""
+    for model in MODEL_ORDER:
+        cells = ""
+        en_mai = lang_mai.get((model, "en"), 0)
+        for lang_code in LANG_META:
+            lm = lang_mai.get((model, lang_code))
+            if lm is None:
+                cells += '<td class="cr-lm-cell">--</td>'
+                continue
+            delta = lm - en_mai if lang_code != "en" else 0
+            bg_intensity = min(lm / 60, 1.0)
+            if lm <= 10:
+                bg = f"rgba(76,175,80,{bg_intensity + 0.1})"
+            elif lm <= 25:
+                bg = f"rgba(255,152,0,{bg_intensity + 0.1})"
+            else:
+                bg = f"rgba(244,67,54,{bg_intensity + 0.1})"
+            delta_str = f'<div class="cr-lm-delta" style="color:{"#f44336" if delta>2 else "#ff9800" if delta>0 else "#4caf50" if delta<-2 else "#888"}">{delta:+.1f}</div>' if lang_code != "en" else ""
+            cells += f'<td class="cr-lm-cell" style="background:{bg}">{lm:.0f}%{delta_str}</td>'
+        short = model.split("(")[0].strip()
+        lang_heatmap_rows += f'<tr><td class="cr-lm-model">{_esc(short)}</td>{cells}</tr>'
+
+    lang_headers = "".join(f'<th>{LANG_META[l][1]}</th>' for l in LANG_META)
+    lang_heatmap_html = f"""
+    <table class="cr-lm-table">
+        <tr><th>Model</th>{lang_headers}</tr>
+        {lang_heatmap_rows}
+    </table>
+    <div class="cr-rm-legend">Values show MAI% (Manufactured Ambiguity Index) for strength {chr(8805)}4 questions. Delta from English shown below.</div>
+    """
+
+    # ── Per-model worst-language highlights ────────────────────
+    worst_lang_html = ""
+    for model in MODEL_ORDER:
+        short = model.split("(")[0].strip()
+        en_mai_val = lang_mai.get((model, "en"), 0)
+        langs_for_model = []
+        for lc in LANG_META:
+            lm = lang_mai.get((model, lc))
+            if lm is not None:
+                langs_for_model.append((lc, lm))
+        if not langs_for_model:
+            continue
+        langs_for_model.sort(key=lambda x: -x[1])
+        worst_lc, worst_val = langs_for_model[0]
+        best_lc, best_val = langs_for_model[-1]
+        worst_name = LANG_META[worst_lc][0]
+        best_name = LANG_META[best_lc][0]
+        worst_flag = LANG_META[worst_lc][1]
+        best_flag = LANG_META[best_lc][1]
+        delta_worst = worst_val - en_mai_val
+        worst_lang_html += f"""
+        <div class="cr-mai-card">
+            <div class="cr-mai-model">{_esc(short)}</div>
+            <div style="margin:.6rem 0">
+                <div style="font-size:.82rem;color:#888">English MAI</div>
+                <div style="font-size:1.4rem;font-weight:700;color:#ff9800">{en_mai_val:.0f}%</div>
+            </div>
+            <div style="margin-bottom:.4rem">
+                <span style="color:#f44336;font-weight:600">Worst:</span>
+                <span>{worst_flag} {worst_name}</span>
+                <span style="color:#f44336;font-weight:700"> {worst_val:.0f}%</span>
+                <span style="color:#f44336;font-size:.78rem"> (+{delta_worst:.0f}pp)</span>
+            </div>
+            <div>
+                <span style="color:#4caf50;font-weight:600">Best:</span>
+                <span>{best_flag} {best_name}</span>
+                <span style="color:#4caf50;font-weight:700"> {best_val:.0f}%</span>
+            </div>
+        </div>"""
+
+    # ── Turkish deep-dive ──────────────────────────────────────
+    turkish_html = ""
+    tr_data = []
+    for model in MODEL_ORDER:
+        tr_mai = lang_mai.get((model, "tr"))
+        en_mai_val = lang_mai.get((model, "en"), 0)
+        if tr_mai is not None:
+            tr_data.append((model, tr_mai, tr_mai - en_mai_val))
+    if tr_data:
+        tr_rows = ""
+        for model, tr_val, delta in sorted(tr_data, key=lambda x: -x[1]):
+            short = model.split("(")[0].strip()
+            color = "#f44336" if delta > 5 else "#ff9800" if delta > 0 else "#4caf50"
+            tr_rows += f"""<div class="cr-str-row" style="margin-bottom:.5rem">
+                <div class="cr-str-label" style="width:150px">{_esc(short)}</div>
+                <div class="cr-str-bar-area">
+                    <div class="cr-str-bar" style="width:{tr_val*1.5}%;background:{color}">{tr_val:.0f}%</div>
+                </div>
+                <div style="width:80px;font-size:.82rem;color:{color};font-weight:600;text-align:right">{delta:+.1f}pp vs EN</div>
+            </div>"""
+        turkish_html = f"""
+        <h2>Turkish Language Deep-Dive</h2>
+        <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Turkish is consistently the worst-performing language across all 5 models. When asked about Greek topics in Turkish, models manufacture significantly more ambiguity on established facts.</p>
+        {tr_rows}
+        """
+
+    # ── Assemble body ──────────────────────────────────────────
+    body = f"""
+<div class="cr-method-box">
+    <h3 style="color:#ffab40;margin-bottom:.8rem">How Language Affects Manufactured Ambiguity</h3>
+    <p>When models are asked the same questions in different languages, does the language of the query
+    affect how willing they are to acknowledge established facts? This analysis measures the
+    <strong>Manufactured Ambiguity Index (MAI)</strong> across {len(LANG_META)} languages for all 5 models,
+    focusing on questions where Greece's position has strong evidential support (strength {chr(8805)}4).</p>
+    <p style="margin-top:.6rem">A higher MAI in a non-English language means the model hedges <em>more</em>
+    on settled facts when asked in that language.</p>
+</div>
+
+<h2>Language MAI Heatmap</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">MAI% per language for strength {chr(8805)}4 questions. Higher = more manufactured ambiguity. Which languages make models hedge more on settled facts?</p>
+{lang_heatmap_html}
+
+<h2>Per-Model Language Vulnerability</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">Which language causes each model to hedge the most on established facts?</p>
+<div class="cr-mai-grid">{worst_lang_html}</div>
+
+{turkish_html}
+"""
+
+    subtitle = f"{len(MODEL_ORDER)} models &middot; {len(LANG_META)} languages &middot; MAI on strength {chr(8805)}4 questions &middot; {time.strftime('%Y-%m-%d %H:%M')}"
+    html = _wrap_html("Language Testing — Greece Alignment Risk", subtitle, body)
+    Path("language_report.html").write_text(html)
+    print(f"  Generated: language_report.html")
+    return html
+
+
+def generate_persona_html(persona_data):
+    """Generate persona_report.html — Tab 3: Persona Testing (how persona affects MAI)."""
+    if not persona_data:
+        return None
+
+    p_mai = persona_data["persona_mai"]
+    p_delta = persona_data["persona_delta"]
+    p_flips = persona_data["persona_flips"]
+
+    # ── MAI heatmap: personas (rows) x models (columns) ───────
+    p_hm_header = "".join(f'<th class="cr-rm-th">{m.split("(")[0].strip()}</th>' for m in PERSONA_MODELS)
+    p_hm_rows = ""
+    for persona in PERSONA_ORDER:
+        cells = ""
+        for model in PERSONA_MODELS:
+            pm = p_mai.get((model, persona))
+            if pm is None:
+                cells += '<td class="cr-rm-cell">--</td>'
+                continue
+            delta = p_delta.get((model, persona), 0)
+            mai_val = pm["mai"]
+            if mai_val <= 15:
+                bg = f"rgba(76,175,80,0.25)"
+            elif mai_val <= 30:
+                bg = f"rgba(255,152,0,0.25)"
+            else:
+                bg = f"rgba(244,67,54,0.25)"
+            delta_color = "#f44336" if delta > 5 else "#ff9800" if delta > 0 else "#4caf50" if delta < -5 else "#888"
+            delta_str = f'<div class="cr-lm-delta" style="color:{delta_color}">{delta:+.1f}pp</div>' if persona != "neutral" else ""
+            cells += f"""<td class="cr-lm-cell" style="background:{bg}">
+                <div class="cr-rm-stack" style="margin-bottom:2px">
+                    <div class="cr-rm-seg" style="width:{pm['green_pct']:.0f}%;background:#4caf50"></div>
+                    <div class="cr-rm-seg" style="width:{pm['amber_pct']:.0f}%;background:#ff9800"></div>
+                    <div class="cr-rm-seg" style="width:{pm['red_pct']:.0f}%;background:#f44336"></div>
+                </div>
+                {mai_val:.0f}%{delta_str}
+            </td>"""
+        name = PERSONA_NAMES.get(persona, persona)
+        style = 'color:#4caf50' if persona == 'neutral' else 'color:#f44336' if persona == 'turkish_nationalist' else 'color:#90caf9' if persona == 'greek_diaspora' else ''
+        p_hm_rows += f'<tr><td class="cr-lm-model" style="{style}">{_esc(name)}</td>{cells}</tr>'
+
+    persona_heatmap = f"""
+    <table class="cr-lm-table">
+        <tr><th>Persona</th>{p_hm_header}</tr>
+        {p_hm_rows}
+    </table>
+    <div class="cr-rm-legend">MAI% on strength {chr(8805)}4 questions. Stacked bar: <span style="color:#4caf50">Supportive</span> / <span style="color:#ff9800">Ambiguous</span> / <span style="color:#f44336">Adverse</span>. Delta shows change from Survey baseline in percentage points.</div>
+    """
+
+    # ── Delta chart ────────────────────────────────────────────
+    delta_bars = ""
+    for model in PERSONA_MODELS:
+        bars = ""
+        sorted_personas = sorted(
+            [p for p in PERSONA_ORDER if p != "neutral"],
+            key=lambda p: p_delta.get((model, p), 0),
+            reverse=True
+        )
+        for persona in sorted_personas:
+            delta = p_delta.get((model, persona), 0)
+            mai_val = p_mai.get((model, persona), {}).get("mai", 0)
+            name = PERSONA_NAMES.get(persona, persona)
+            w = min(abs(delta) * 4, 250)
+            color = "#f44336" if delta > 5 else "#ff9800" if delta > 0 else "#4caf50" if delta < -5 else "#888"
+            bars += f"""<div class="cr-str-row" style="margin-bottom:.4rem">
+                <div class="cr-str-label" style="width:180px;font-size:.78rem">{_esc(name)}</div>
+                <div style="flex:1;position:relative;height:22px;display:flex;align-items:center;justify-content:center">
+                    <div style="position:absolute;left:50%;width:1px;height:100%;background:#444"></div>
+                    <div style="height:16px;border-radius:3px;position:absolute;{'left:50%' if delta>=0 else 'right:50%'};width:{w}px;background:{color}"></div>
+                    <span style="position:relative;z-index:1;font-size:.78rem;font-weight:600;color:{color}">{delta:+.1f}pp (MAI:{mai_val:.0f}%)</span>
+                </div>
+            </div>"""
+        short = model.split("(")[0].strip()
+        baseline_mai = p_mai.get((model, "neutral"), {}).get("mai", 0)
+        delta_bars += f"""<div style="margin-bottom:1.5rem">
+            <div style="font-size:.9rem;font-weight:600;color:#90caf9;margin-bottom:.5rem">{_esc(short)} <span style="color:#666">(Survey baseline MAI: {baseline_mai:.0f}%)</span></div>
+            {bars}
+        </div>"""
+
+    # ── Persona flips ──────────────────────────────────────────
+    flips_html = ""
+    if p_flips:
+        for fl in p_flips[:25]:
+            sc_color = "#f44336" if fl["persona_score"] <= 2 else "#ff9800"
+            flips_html += f"""
+            <div class="cr-gun-card" style="border-left-color:#ff9800">
+                <div class="cr-gun-header">
+                    <span class="cr-gun-qid">Q{fl['qid']}</span>
+                    <span class="cr-gun-cat">{_esc(fl['category'])}</span>
+                    <span class="cr-gun-model">{_esc(fl['model'].split('(')[0].strip())}</span>
+                    <span style="font-size:.78rem;font-weight:600;color:#ff9800">{_esc(fl['persona_name'])}</span>
+                    <span style="font-size:.78rem;color:#4caf50">Neutral: {fl['neutral_score']}/5</span>
+                    <span style="font-size:.78rem">{chr(8594)}</span>
+                    <span class="cr-gun-score" style="color:{sc_color}">Persona: {fl['persona_score']}/5</span>
+                </div>
+                <div class="cr-gun-query">{_esc(fl['query'])}</div>
+                <div class="cr-gun-reasoning"><em>{_esc(fl['reasoning'])}</em></div>
+            </div>"""
+    else:
+        flips_html = '<p style="color:#4caf50">No persona-induced flips on undisputed facts found.</p>'
+
+    # ── Assemble body ──────────────────────────────────────────
+    body = f"""
+<div class="cr-method-box">
+    <h3 style="color:#ffab40;margin-bottom:.8rem">How Personas Affect Manufactured Ambiguity</h3>
+    <p>When a model is asked to adopt a persona (e.g. "You are a Turkish Nationalist"), does it
+    hedge more on established facts about Greece? This analysis measures the <strong>Manufactured
+    Ambiguity Index (MAI)</strong> across 10 personas for {len(PERSONA_MODELS)} models, comparing each
+    persona's MAI to the survey baseline (no persona).</p>
+    <p style="margin-top:.6rem">A higher MAI means the persona prompt causes the model to
+    <em>manufacture more ambiguity</em> on questions where Greece's position is well-established.</p>
+</div>
+
+<h2>MAI by Persona (strength {chr(8805)}4 questions)</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">How do persona prompts affect the Manufactured Ambiguity Index? When a model adopts a persona, does it hedge more on established facts?</p>
+{persona_heatmap}
+
+<h2>MAI Shift from Survey Baseline</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">Change in manufactured ambiguity vs. survey baseline. <span style="color:#f44336">Red = more ambiguity on settled facts</span>, <span style="color:#4caf50">Green = less</span>.</p>
+{delta_bars}
+
+<h2>Persona-Induced Flips on Undisputed Facts</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">Strength 5 questions where the survey baseline scored supportive (4-5) but a persona manipulation flipped the response to ambiguous or adverse ({chr(8804)}3).</p>
+{flips_html}
+"""
+
+    subtitle = f"{len(PERSONA_MODELS)} models &middot; {len(PERSONA_ORDER)} personas &middot; {persona_data['total_persona_results']} responses &middot; {time.strftime('%Y-%m-%d %H:%M')}"
+    html = _wrap_html("Persona Testing — Greece Alignment Risk", subtitle, body)
+    Path("persona_report.html").write_text(html)
+    print(f"  Generated: persona_report.html")
     return html
 
 
@@ -1169,8 +1283,11 @@ def main():
     else:
         print("  No persona results found")
 
-    print("\nGenerating report...")
-    generate_consensus_html(data, persona_data)
+    print("\nGenerating reports...")
+    generate_experiment_html(data)
+    generate_language_html(data)
+    if persona_data:
+        generate_persona_html(persona_data)
 
 
 if __name__ == "__main__":
