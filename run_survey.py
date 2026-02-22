@@ -26,7 +26,7 @@ OPENAI_MODEL = "gpt-5.2"
 CLAUDE_MODEL = "claude-opus-4-6"
 QWEN_MODEL = "qwen/qwen3.5-plus-02-15"
 DEEPSEEK_MODEL = "deepseek/deepseek-v3.2"
-GEMINI_MODEL = "gemini-3-pro-preview"
+GEMINI_MODEL = "gemini-3.1-pro-preview"
 SCORER_MODEL = "gpt-5.2"
 
 # ── Languages ─────────────────────────────────────────────────────────
@@ -230,7 +230,7 @@ def query_gemini(client: genai.Client, question: str, lang: str) -> str:
             config=genai.types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPTS_TRANSLATED.get(lang, SYSTEM_PROMPT),
                 temperature=0.3,
-                max_output_tokens=1000,
+                max_output_tokens=2048,
             ),
         )
         return r.text.strip()
@@ -565,7 +565,7 @@ def main():
         ("Claude (Opus 4.6)",   lambda q, l: query_claude(anth, q, l)),
         ("Qwen 3.5 Plus",      lambda q, l: query_openrouter(orr, QWEN_MODEL, q, l)),
         ("DeepSeek v3.2",      lambda q, l: query_openrouter(orr, DEEPSEEK_MODEL, q, l)),
-        ("Gemini 3 Pro",       lambda q, l: query_gemini(gem, q, l)),
+        ("Gemini 3.1 Pro",     lambda q, l: query_gemini(gem, q, l)),
     ]
 
     all_results = {}

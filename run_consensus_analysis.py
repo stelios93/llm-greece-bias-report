@@ -228,7 +228,7 @@ MODEL_ORDER = [
     "Claude (Opus 4.6)",
     "Qwen 3.5 Plus",
     "DeepSeek v3.2",
-    "Gemini 3 Pro",
+    "Gemini 3.1 Pro",
 ]
 
 LANG_META = {
