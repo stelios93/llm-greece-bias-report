@@ -561,11 +561,11 @@ def main():
 
     # Model definitions: (key, query_fn, results_prefix)
     model_defs = [
-        ("ChatGPT (GPT-5.2)",  lambda q, l: query_openai(oai, q, l)),
-        ("Claude (Opus 4.6)",   lambda q, l: query_claude(anth, q, l)),
+        ("GPT 5.2",            lambda q, l: query_openai(oai, q, l)),
+        ("Claude Opus 4.6",    lambda q, l: query_claude(anth, q, l)),
+        ("Gemini 3.1 Pro",     lambda q, l: query_gemini(gem, q, l)),
         ("Qwen 3.5 Plus",      lambda q, l: query_openrouter(orr, QWEN_MODEL, q, l)),
         ("DeepSeek v3.2",      lambda q, l: query_openrouter(orr, DEEPSEEK_MODEL, q, l)),
-        ("Gemini 3.1 Pro",     lambda q, l: query_gemini(gem, q, l)),
     ]
 
     all_results = {}

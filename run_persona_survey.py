@@ -360,8 +360,8 @@ def load_baselines():
     """Load existing English baseline results for comparison."""
     baselines = {}
     baseline_files = {
-        "ChatGPT (GPT-5.2)": "results_chatgpt_gpt-52_en.json",
-        "Claude (Opus 4.6)": "results_claude_opus_46_en.json",
+        "GPT 5.2": "results_gpt_52_en.json",
+        "Claude Opus 4.6": "results_claude_opus_46_en.json",
     }
     for model_key, fname in baseline_files.items():
         fpath = Path(fname)
@@ -401,7 +401,7 @@ def generate_persona_report(all_results: dict):
         cl, co = _classify(avg)
         stats[(model_key, "baseline")] = {"avg": avg, "classification": cl, "color": co}
 
-    model_colors = {"ChatGPT (GPT-5.2)": "#10a37f", "Claude (Opus 4.6)": "#d4a574"}
+    model_colors = {"GPT 5.2": "#10a37f", "Claude Opus 4.6": "#d4a574"}
 
     # ── 1. OVERVIEW HEATMAP ──────────────────────────────────────
     heatmap_rows = ""
@@ -730,8 +730,8 @@ def main():
     scorer = oai
 
     model_defs = [
-        ("ChatGPT (GPT-5.2)", lambda q, sp: query_openai(oai, q, sp)),
-        ("Claude (Opus 4.6)",  lambda q, sp: query_claude(anth, q, sp)),
+        ("GPT 5.2",           lambda q, sp: query_openai(oai, q, sp)),
+        ("Claude Opus 4.6",   lambda q, sp: query_claude(anth, q, sp)),
     ]
 
     all_results = {}

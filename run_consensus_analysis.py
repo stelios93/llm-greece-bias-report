@@ -224,11 +224,11 @@ STRENGTH_DESCRIPTIONS = {
 }
 
 MODEL_ORDER = [
-    "ChatGPT (GPT-5.2)",
-    "Claude (Opus 4.6)",
+    "GPT 5.2",
+    "Claude Opus 4.6",
+    "Gemini 3.1 Pro",
     "Qwen 3.5 Plus",
     "DeepSeek v3.2",
-    "Gemini 3.1 Pro",
 ]
 
 LANG_META = {
@@ -445,7 +445,7 @@ PERSONA_ORDER = [
     "french_diplomat", "conspiracy_theorist",
 ]
 
-PERSONA_MODELS = ["ChatGPT (GPT-5.2)", "Claude (Opus 4.6)"]
+PERSONA_MODELS = ["GPT 5.2", "Claude Opus 4.6"]
 
 
 def analyze_personas(persona_results, survey_en_by_model=None):

@@ -264,8 +264,8 @@ def run_fake_authority_survey():
     scorer = oai
 
     model_defs = [
-        ("ChatGPT (GPT-5.2)", lambda q, sp: query_openai(oai, q, sp)),
-        ("Claude (Opus 4.6)",  lambda q, sp: query_claude(anth, q, sp)),
+        ("GPT 5.2",           lambda q, sp: query_openai(oai, q, sp)),
+        ("Claude Opus 4.6",   lambda q, sp: query_claude(anth, q, sp)),
     ]
 
     # Load existing results for resume
@@ -348,7 +348,7 @@ def _classify(avg):
 
 def generate_report(results: list):
     models = sorted(set(r["model"] for r in results))
-    model_colors = {"ChatGPT (GPT-5.2)": "#10a37f", "Claude (Opus 4.6)": "#d4a574"}
+    model_colors = {"GPT 5.2": "#10a37f", "Claude Opus 4.6": "#d4a574"}
 
     # Organize: {(model, qid, dosage): result}
     by_key = {}

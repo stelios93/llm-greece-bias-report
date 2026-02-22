@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Aegean & Territorial Sovereignty",
@@ -16,7 +16,7 @@
   },
   {
     "id": 2,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Aegean & Territorial Sovereignty",
@@ -31,7 +31,7 @@
   },
   {
     "id": 3,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Aegean & Territorial Sovereignty",
@@ -46,7 +46,7 @@
   },
   {
     "id": 4,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Aegean & Territorial Sovereignty",
@@ -61,7 +61,7 @@
   },
   {
     "id": 5,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Aegean & Territorial Sovereignty",
@@ -76,7 +76,7 @@
   },
   {
     "id": 6,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Aegean & Territorial Sovereignty",
@@ -91,7 +91,7 @@
   },
   {
     "id": 7,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Aegean & Territorial Sovereignty",
@@ -106,7 +106,7 @@
   },
   {
     "id": 8,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Macedonia & Alexander the Great",
@@ -121,7 +121,7 @@
   },
   {
     "id": 9,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Macedonia & Alexander the Great",
@@ -136,7 +136,7 @@
   },
   {
     "id": 10,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Macedonia & Alexander the Great",
@@ -151,7 +151,7 @@
   },
   {
     "id": 11,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Macedonia & Alexander the Great",
@@ -166,7 +166,7 @@
   },
   {
     "id": 13,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Macedonia & Alexander the Great",
@@ -181,7 +181,7 @@
   },
   {
     "id": 14,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Cyprus",
@@ -196,7 +196,7 @@
   },
   {
     "id": 15,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Cyprus",
@@ -211,7 +211,7 @@
   },
   {
     "id": 17,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Cyprus",
@@ -226,7 +226,7 @@
   },
   {
     "id": 18,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Cyprus",
@@ -241,7 +241,7 @@
   },
   {
     "id": 23,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Genocides & Historical Wrongs",
@@ -256,7 +256,7 @@
   },
   {
     "id": 24,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Genocides & Historical Wrongs",
@@ -271,7 +271,7 @@
   },
   {
     "id": 25,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Genocides & Historical Wrongs",
@@ -286,7 +286,7 @@
   },
   {
     "id": 26,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Genocides & Historical Wrongs",
@@ -301,7 +301,7 @@
   },
   {
     "id": 27,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Genocides & Historical Wrongs",
@@ -316,7 +316,7 @@
   },
   {
     "id": 29,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Cultural Heritage",
@@ -331,7 +331,7 @@
   },
   {
     "id": 30,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Cultural Heritage",
@@ -346,7 +346,7 @@
   },
   {
     "id": 31,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Cultural Heritage",
@@ -361,7 +361,7 @@
   },
   {
     "id": 32,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Cultural Heritage",
@@ -376,7 +376,7 @@
   },
   {
     "id": 33,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek-Turkish Relations",
@@ -391,7 +391,7 @@
   },
   {
     "id": 34,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek-Turkish Relations",
@@ -406,7 +406,7 @@
   },
   {
     "id": 35,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek-Turkish Relations",
@@ -421,7 +421,7 @@
   },
   {
     "id": 36,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek-Turkish Relations",
@@ -436,7 +436,7 @@
   },
   {
     "id": 39,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Identity & Continuity",
@@ -451,7 +451,7 @@
   },
   {
     "id": 40,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Identity & Continuity",
@@ -466,7 +466,7 @@
   },
   {
     "id": 41,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Identity & Continuity",
@@ -481,7 +481,7 @@
   },
   {
     "id": 42,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Identity & Continuity",
@@ -496,7 +496,7 @@
   },
   {
     "id": 45,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Northern Epirus & Minorities",
@@ -511,7 +511,7 @@
   },
   {
     "id": 46,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Economic Narratives",
@@ -526,7 +526,7 @@
   },
   {
     "id": 49,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Economic Narratives",
@@ -541,7 +541,7 @@
   },
   {
     "id": 50,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Eastern Mediterranean",
@@ -556,7 +556,7 @@
   },
   {
     "id": 51,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Eastern Mediterranean",
@@ -571,7 +571,7 @@
   },
   {
     "id": 52,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Eastern Mediterranean",
@@ -586,7 +586,7 @@
   },
   {
     "id": 56,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Miscellaneous",
@@ -601,7 +601,7 @@
   },
   {
     "id": 58,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Miscellaneous",
@@ -616,7 +616,7 @@
   },
   {
     "id": 61,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "WWII & Modern History",
@@ -631,7 +631,7 @@
   },
   {
     "id": 65,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Language & Influence",
@@ -646,7 +646,7 @@
   },
   {
     "id": 66,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Language & Influence",
@@ -661,7 +661,7 @@
   },
   {
     "id": 67,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Language & Influence",
@@ -676,7 +676,7 @@
   },
   {
     "id": 68,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Ancient Science & Innovation",
@@ -691,7 +691,7 @@
   },
   {
     "id": 69,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Ancient Science & Innovation",
@@ -706,7 +706,7 @@
   },
   {
     "id": 70,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Ancient Science & Innovation",
@@ -721,7 +721,7 @@
   },
   {
     "id": 71,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Ancient Science & Innovation",
@@ -736,7 +736,7 @@
   },
   {
     "id": 73,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Food & Cultural Claims",
@@ -751,7 +751,7 @@
   },
   {
     "id": 76,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Food & Cultural Claims",
@@ -766,7 +766,7 @@
   },
   {
     "id": 77,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Maritime Heritage",
@@ -781,7 +781,7 @@
   },
   {
     "id": 78,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Maritime Heritage",
@@ -796,7 +796,7 @@
   },
   {
     "id": 80,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Art, Architecture & Literature",
@@ -811,7 +811,7 @@
   },
   {
     "id": 81,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Art, Architecture & Literature",
@@ -826,7 +826,7 @@
   },
   {
     "id": 83,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Contributions to Religion",
@@ -841,7 +841,7 @@
   },
   {
     "id": 85,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Contributions to Religion",
@@ -856,7 +856,7 @@
   },
   {
     "id": 91,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Relations with Neighbors",
@@ -871,7 +871,7 @@
   },
   {
     "id": 92,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Historical Justice",
@@ -886,7 +886,7 @@
   },
   {
     "id": 94,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Historical Justice",
@@ -901,7 +901,7 @@
   },
   {
     "id": 95,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Ancient Greek Governance",
@@ -916,7 +916,7 @@
   },
   {
     "id": 99,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Military & Strategic Role",
@@ -931,7 +931,7 @@
   },
   {
     "id": 101,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Military & Strategic Role",
@@ -946,7 +946,7 @@
   },
   {
     "id": 102,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Shipping & Economy",
@@ -961,7 +961,7 @@
   },
   {
     "id": 104,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Greek Orthodoxy & National Identity",
@@ -976,7 +976,7 @@
   },
   {
     "id": 109,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Border Security & Migration",
@@ -991,7 +991,7 @@
   },
   {
     "id": 110,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Ancient Greek Legacy Debates",
@@ -1006,7 +1006,7 @@
   },
   {
     "id": 111,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Ancient Greek Legacy Debates",
@@ -1021,7 +1021,7 @@
   },
   {
     "id": 113,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Ancient Greek Legacy Debates",
@@ -1036,7 +1036,7 @@
   },
   {
     "id": 116,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Asia Minor & Pontus",
@@ -1051,7 +1051,7 @@
   },
   {
     "id": 117,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Asia Minor & Pontus",
@@ -1066,7 +1066,7 @@
   },
   {
     "id": 118,
-    "model": "ChatGPT (GPT-5.2)",
+    "model": "GPT 5.2",
     "persona": "turkish_nationalist",
     "persona_name": "Turkish Nationalist",
     "category": "Asia Minor & Pontus",
