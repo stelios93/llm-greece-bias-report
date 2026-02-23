@@ -26,7 +26,7 @@ OPENAI_MODEL = "gpt-5.2"
 CLAUDE_MODEL = "claude-opus-4-6"
 QWEN_MODEL = "qwen/qwen3.5-plus-02-15"
 DEEPSEEK_MODEL = "deepseek/deepseek-v3.2"
-GEMINI_MODEL = "gemini-3.1-pro-preview"
+GEMINI_MODEL = "google/gemini-3.1-pro-preview"
 SCORER_MODEL = "gpt-5.2"
 
 # ── Languages ─────────────────────────────────────────────────────────
@@ -203,7 +203,7 @@ def query_claude(client: anthropic.Anthropic, question: str, lang: str) -> str:
         return f"[ERROR] {e}"
 
 
-def query_openrouter(client: OpenAI, model: str, question: str, lang: str) -> str:
+def query_openrouter(client: OpenAI, model: str, question: str, lang: str, max_tokens: int = 2048) -> str:
     try:
         r = client.chat.completions.create(
             model=model,
@@ -212,7 +212,7 @@ def query_openrouter(client: OpenAI, model: str, question: str, lang: str) -> st
                 {"role": "user", "content": LANGUAGES[lang]["instruction"] + question},
             ],
             temperature=0.3,
-            max_tokens=1000,
+            max_tokens=max_tokens,
         )
         content = r.choices[0].message.content if r.choices and r.choices[0].message else None
         if not content:
@@ -319,7 +319,7 @@ def run_model_survey(model_key: str, lang: str, query_fn, scorer: OpenAI,
             "sensitivity": q["sensitivity"],
         })
         results_file.write_text(json.dumps(results, indent=2, ensure_ascii=False))
-        time.sleep(2.0 if "Gemini" in model_key else 0.3)
+        time.sleep(0.3)
 
     print(f"  Done! {len(results)} results → {results_file}")
     return results
@@ -563,7 +563,7 @@ def main():
     model_defs = [
         ("GPT 5.2",            lambda q, l: query_openai(oai, q, l)),
         ("Claude Opus 4.6",    lambda q, l: query_claude(anth, q, l)),
-        ("Gemini 3.1 Pro",     lambda q, l: query_gemini(gem, q, l)),
+        ("Gemini 3.1 Pro",     lambda q, l: query_openrouter(orr, GEMINI_MODEL, q, l)),
         ("Qwen 3.5 Plus",      lambda q, l: query_openrouter(orr, QWEN_MODEL, q, l)),
         ("DeepSeek v3.2",      lambda q, l: query_openrouter(orr, DEEPSEEK_MODEL, q, l)),
     ]

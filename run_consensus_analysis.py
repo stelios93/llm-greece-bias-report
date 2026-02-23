@@ -931,13 +931,15 @@ def generate_language_html(data):
     lang_mai = data["lang_mai"]
     mai = data["mai_by_model"]
 
-    # ── Language MAI Heatmap ───────────────────────────────────
+    # ── Language MAI Heatmap (transposed: languages on rows, models on columns) ──
+    model_headers = "".join(f'<th>{m}</th>' for m in MODEL_ORDER)
     lang_heatmap_rows = ""
-    for model in MODEL_ORDER:
+    for lang_code in LANG_META:
+        lang_name = LANG_META[lang_code][0]
         cells = ""
-        en_mai = lang_mai.get((model, "en"), 0)
-        for lang_code in LANG_META:
+        for model in MODEL_ORDER:
             lm = lang_mai.get((model, lang_code))
+            en_mai = lang_mai.get((model, "en"), 0)
             if lm is None:
                 cells += '<td class="cr-lm-cell">--</td>'
                 continue
@@ -951,13 +953,11 @@ def generate_language_html(data):
                 bg = f"rgba(244,67,54,{bg_intensity + 0.1})"
             delta_str = f'<div class="cr-lm-delta" style="color:{"#f44336" if delta>2 else "#ff9800" if delta>0 else "#4caf50" if delta<-2 else "#888"}">{delta:+.1f}</div>' if lang_code != "en" else ""
             cells += f'<td class="cr-lm-cell" style="background:{bg}">{lm:.0f}%{delta_str}</td>'
-        short = model.split("(")[0].strip()
-        lang_heatmap_rows += f'<tr><td class="cr-lm-model">{_esc(short)}</td>{cells}</tr>'
+        lang_heatmap_rows += f'<tr><td class="cr-lm-model">{_esc(lang_name)}</td>{cells}</tr>'
 
-    lang_headers = "".join(f'<th>{LANG_META[l][1]}</th>' for l in LANG_META)
     lang_heatmap_html = f"""
     <table class="cr-lm-table">
-        <tr><th>Model</th>{lang_headers}</tr>
+        <tr><th>Language</th>{model_headers}</tr>
         {lang_heatmap_rows}
     </table>
     <div class="cr-rm-legend">Values show MAI% (Manufactured Ambiguity Index) for strength {chr(8805)}4 questions. Delta from English shown below.</div>
@@ -980,8 +980,6 @@ def generate_language_html(data):
         best_lc, best_val = langs_for_model[-1]
         worst_name = LANG_META[worst_lc][0]
         best_name = LANG_META[best_lc][0]
-        worst_flag = LANG_META[worst_lc][1]
-        best_flag = LANG_META[best_lc][1]
         delta_worst = worst_val - en_mai_val
         worst_lang_html += f"""
         <div class="cr-mai-card">
@@ -992,13 +990,13 @@ def generate_language_html(data):
             </div>
             <div style="margin-bottom:.4rem">
                 <span style="color:#f44336;font-weight:600">Worst:</span>
-                <span>{worst_flag} {worst_name}</span>
+                <span>{worst_name}</span>
                 <span style="color:#f44336;font-weight:700"> {worst_val:.0f}%</span>
                 <span style="color:#f44336;font-size:.78rem"> (+{delta_worst:.0f}pp)</span>
             </div>
             <div>
                 <span style="color:#4caf50;font-weight:600">Best:</span>
-                <span>{best_flag} {best_name}</span>
+                <span>{best_name}</span>
                 <span style="color:#4caf50;font-weight:700"> {best_val:.0f}%</span>
             </div>
         </div>"""
@@ -1160,15 +1158,43 @@ def generate_persona_html(persona_data):
     else:
         flips_html = '<p style="color:#4caf50">No persona-induced flips on undisputed facts found.</p>'
 
+    # ── Simulated conversations reference ──────────────────────
+    convos_html = ""
+    try:
+        from persona_conversations import PERSONA_CONVERSATIONS
+        for persona_key in PERSONA_ORDER:
+            if persona_key == "neutral":
+                continue
+            name = PERSONA_NAMES.get(persona_key, persona_key)
+            convos = PERSONA_CONVERSATIONS.get(persona_key, [])
+            if not convos:
+                continue
+            cards = ""
+            for j, c in enumerate(convos, 1):
+                label = "Greek-adjacent" if j > 7 else "General worldview"
+                label_color = "#ff9800" if j > 7 else "#666"
+                cards += f"""<div style="background:#1a1a2e;border-radius:8px;padding:.8rem 1rem;margin-bottom:.6rem">
+                    <div style="font-size:.7rem;color:{label_color};margin-bottom:.3rem">{label} #{j}</div>
+                    <div style="color:#90caf9;font-size:.82rem;margin-bottom:.3rem"><strong>User:</strong> {_esc(c['user'])}</div>
+                    <div style="color:#aaa;font-size:.82rem"><strong>Assistant:</strong> {_esc(c['assistant'])}</div>
+                </div>"""
+            convos_html += f"""<details style="margin-bottom:1rem">
+                <summary style="cursor:pointer;font-weight:600;color:#e0e0e0;padding:.5rem 0">{_esc(name)} ({len(convos)} conversations)</summary>
+                <div style="padding:.5rem 0">{cards}</div>
+            </details>"""
+    except ImportError:
+        convos_html = '<p style="color:#888">Conversation data not available.</p>'
+
     # ── Assemble body ──────────────────────────────────────────
     body = f"""
 <div class="cr-method-box">
     <h3 style="color:#ffab40;margin-bottom:.8rem">How Personas Affect Manufactured Ambiguity</h3>
-    <p>When a model is asked to adopt a persona (e.g. "You are a Turkish Nationalist"), does it
-    hedge more on established facts about Greece? This analysis measures the <strong>Manufactured
+    <p>Each persona is simulated through <strong>10 prior conversations</strong> (~7 general worldview + ~3 Greek-adjacent)
+    injected as conversation history, rather than explicit "you are a ..." instructions. This mimics how real
+    user profiles are built through interaction patterns. The model infers the user's worldview from context.</p>
+    <p style="margin-top:.6rem">We measure the <strong>Manufactured
     Ambiguity Index (MAI)</strong> across 10 personas for {len(PERSONA_MODELS)} models, comparing each
-    persona's MAI to the survey baseline (no persona).</p>
-    <p style="margin-top:.6rem">A higher MAI means the persona prompt causes the model to
+    persona's MAI to the survey baseline (no persona). A higher MAI means the persona causes the model to
     <em>manufacture more ambiguity</em> on questions where Greece's position is well-established.</p>
 </div>
 
@@ -1183,6 +1209,10 @@ def generate_persona_html(persona_data):
 <h2>Persona-Induced Flips on Undisputed Facts</h2>
 <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Strength 5 questions where the survey baseline scored supportive (4-5) but a persona manipulation flipped the response to ambiguous or adverse ({chr(8804)}3).</p>
 {flips_html}
+
+<h2>Simulated Conversation Histories</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">Full conversation histories used to build each persona profile. Click to expand.</p>
+{convos_html}
 """
 
     subtitle = f"{len(PERSONA_MODELS)} models &middot; {len(PERSONA_ORDER)} personas &middot; {persona_data['total_persona_results']} responses &middot; {time.strftime('%Y-%m-%d %H:%M')}"
