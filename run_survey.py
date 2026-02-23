@@ -319,7 +319,7 @@ def run_model_survey(model_key: str, lang: str, query_fn, scorer: OpenAI,
             "sensitivity": q["sensitivity"],
         })
         results_file.write_text(json.dumps(results, indent=2, ensure_ascii=False))
-        time.sleep(0.3)
+        time.sleep(2.0 if "Gemini" in model_key else 0.3)
 
     print(f"  Done! {len(results)} results → {results_file}")
     return results
