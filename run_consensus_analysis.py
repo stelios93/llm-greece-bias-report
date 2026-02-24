@@ -14,8 +14,9 @@ Zero API calls needed — pure re-analysis of existing scored responses.
 
 import json
 import time
+import base64
 from pathlib import Path
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from queries import QUERIES
 
@@ -979,7 +980,139 @@ def generate_experiment_html(data):
             <div>{score_pills}</div>
         </div>'''
 
+    # ── Generate divergence chart (base64 embedded) ─────────
+    divergence_img_html = ""
+    try:
+        import numpy as np
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        from matplotlib.lines import Line2D
+        import io
+
+        origins = {'GPT 5.2': 'US', 'Claude Opus 4.6': 'US', 'Gemini 3.1 Pro': 'US',
+                   'Qwen 3.5 Plus': 'China', 'DeepSeek v3.2': 'China'}
+        high_qids = [qid for qid, s in POSITION_STRENGTH.items() if s >= 4]
+
+        # Get scores per model on high-strength questions
+        model_scores = {}
+        for model in MODEL_ORDER:
+            model_scores[model] = {qid: data["per_question"][qid]["scores"].get(model, 3) for qid in high_qids if qid in data["per_question"]}
+
+        # MAI per model
+        mai_vals = {}
+        for m in MODEL_ORDER:
+            sc = list(model_scores[m].values())
+            mai_vals[m] = sum(1 for s in sc if s <= 3) / len(sc) * 100 if sc else 0
+
+        # Pairwise exact agreement on high-strength
+        pair_data = []
+        for i, m1 in enumerate(MODEL_ORDER):
+            for j, m2 in enumerate(MODEL_ORDER):
+                if i >= j: continue
+                common = [qid for qid in high_qids if qid in model_scores[m1] and qid in model_scores[m2]]
+                if not common: continue
+                exact = sum(1 for q in common if model_scores[m1][q] == model_scores[m2][q]) / len(common) * 100
+                close = sum(1 for q in common if abs(model_scores[m1][q] - model_scores[m2][q]) <= 1) / len(common) * 100
+                o1, o2 = origins[m1], origins[m2]
+                ptype = 'Within US' if o1 == o2 == 'US' else 'Within China' if o1 == o2 == 'China' else 'Cross-bloc'
+                pair_data.append({'label': f'{m1.split()[0]}-{m2.split()[0]}', 'exact': exact, 'close': close, 'type': ptype, 'm1': m1, 'm2': m2})
+        pair_data.sort(key=lambda x: -x['exact'])
+
+        fig = plt.figure(figsize=(20, 10))
+        fig.patch.set_facecolor('#0d1117')
+        fig.suptitle('Model Divergence Is Individual, Not Geopolitical', fontsize=18, fontweight='bold', color='white', y=0.97)
+
+        # Panel 1: Score distribution
+        ax1 = fig.add_subplot(131)
+        ax1.set_facecolor('#161b22')
+        score_colors = {5: '#2e7d32', 4: '#66bb6a', 3: '#ff9800', 2: '#ef5350', 1: '#b71c1c'}
+        for idx, m in enumerate(MODEL_ORDER):
+            sc = list(model_scores[m].values())
+            counts = Counter(sc)
+            total = len(sc)
+            bottom = 0
+            for score in [5, 4, 3, 2, 1]:
+                pct = counts.get(score, 0) / total * 100
+                ax1.barh(idx, pct, left=bottom, height=0.6, color=score_colors[score], edgecolor='#0d1117', linewidth=0.5)
+                if pct > 5:
+                    ax1.text(bottom + pct/2, idx, f'{pct:.0f}%', ha='center', va='center', fontsize=8, color='white', fontweight='bold')
+                bottom += pct
+        ax1.set_yticks(range(len(MODEL_ORDER)))
+        ax1.set_yticklabels([f'{m}\n({origins[m]})' for m in MODEL_ORDER], fontsize=9, fontweight='bold', color='white')
+        ax1.set_xlabel('% of Responses', color='#aaa', fontsize=10)
+        ax1.set_title(f'Score Distribution on Established Facts\n({len(high_qids)} questions, strength ≥4)', color='#ccc', fontsize=11, pad=12)
+        ax1.tick_params(colors='white')
+        for sp in ax1.spines.values(): sp.set_color('#333')
+        ax1.spines['top'].set_visible(False); ax1.spines['right'].set_visible(False)
+        ax1.invert_yaxis()
+        score_legend = [plt.Rectangle((0,0),1,1, fc=score_colors[s], label=f'{s} ({"Strongly Supportive" if s==5 else "Leans Supportive" if s==4 else "Ambiguous" if s==3 else "Leans Adverse" if s==2 else "Strongly Adverse"})') for s in [5,4,3,2,1]]
+        ax1.legend(handles=score_legend, loc='lower right', fontsize=7.5, facecolor='#1a1a2e', edgecolor='#333', labelcolor='white')
+
+        # Panel 2: MAI bars
+        ax2 = fig.add_subplot(132)
+        ax2.set_facecolor('#161b22')
+        sorted_mai = sorted(MODEL_ORDER, key=lambda m: -mai_vals[m])
+        mai_colors = ['#f44336' if m == 'GPT 5.2' else '#4fc3f7' if origins[m] == 'US' else '#ef5350' for m in sorted_mai]
+        bars2 = ax2.barh(range(len(sorted_mai)-1,-1,-1), [mai_vals[m] for m in sorted_mai], color=mai_colors, height=0.55,
+                        edgecolor=['#ff6659' if m == 'GPT 5.2' else '#333' for m in sorted_mai],
+                        linewidth=[2.5 if m == 'GPT 5.2' else 0.5 for m in sorted_mai])
+        ax2.set_yticks(range(len(sorted_mai)-1,-1,-1))
+        ax2.set_yticklabels([f'{m}\n({origins[m]})' for m in sorted_mai], fontsize=9, fontweight='bold', color='white')
+        ax2.set_xlabel('Manufactured Ambiguity Index (%)', color='#aaa', fontsize=10)
+        ax2.set_title('MAI: Who Hedges Most on Facts?\nHigher = more ambiguity on settled questions', color='#ccc', fontsize=11, pad=12)
+        ax2.tick_params(colors='white')
+        for sp in ax2.spines.values(): sp.set_color('#333')
+        ax2.spines['top'].set_visible(False); ax2.spines['right'].set_visible(False)
+        for idx, m in enumerate(sorted_mai):
+            ax2.text(mai_vals[m] + 0.3, len(sorted_mai)-1-idx, f'{mai_vals[m]:.1f}%', va='center', fontsize=10, color='white', fontweight='bold')
+        avg_mai = sum(mai_vals.values()) / len(mai_vals)
+        ax2.axvline(avg_mai, color='#ffab40', linestyle='--', linewidth=1.2, alpha=0.7)
+        ax2.text(avg_mai + 0.3, len(sorted_mai)-0.3, f'avg: {avg_mai:.1f}%', fontsize=8, color='#ffab40')
+
+        # Panel 3: Pairwise agreement
+        ax3 = fig.add_subplot(133)
+        ax3.set_facecolor('#161b22')
+        type_colors = {'Within US': '#4fc3f7', 'Within China': '#ef5350', 'Cross-bloc': '#ab47bc'}
+        for idx, p in enumerate(pair_data):
+            pos = len(pair_data)-1-idx
+            color = type_colors[p['type']]
+            edge = '#f44336' if 'GPT' in p['label'] else '#333'
+            edgew = 2 if 'GPT' in p['label'] else 0.5
+            ax3.barh(pos, p['exact'], height=0.45, color=color, alpha=0.8, edgecolor=edge, linewidth=edgew)
+            ax3.barh(pos, p['close'], height=0.45, color=color, alpha=0.15, edgecolor='none')
+            ax3.text(p['close'] + 0.5, pos, f"{p['exact']:.0f}% / {p['close']:.0f}%", va='center', fontsize=8, color='white', fontweight='bold')
+        ax3.set_yticks(range(len(pair_data)-1,-1,-1))
+        ax3.set_yticklabels([p['label'] for p in pair_data], fontsize=9, fontweight='bold', color='white')
+        ax3.set_xlabel('Agreement % (exact / ±1)', color='#aaa', fontsize=10)
+        ax3.set_title('Pairwise Agreement on Established Facts\nGrouped by model origin', color='#ccc', fontsize=11, pad=12)
+        ax3.tick_params(colors='white')
+        for sp in ax3.spines.values(): sp.set_color('#333')
+        ax3.spines['top'].set_visible(False); ax3.spines['right'].set_visible(False)
+        type_legend = [plt.Rectangle((0,0),1,1, fc='#4fc3f7', alpha=0.8, label='Within US'),
+                       plt.Rectangle((0,0),1,1, fc='#ef5350', alpha=0.8, label='Within China'),
+                       plt.Rectangle((0,0),1,1, fc='#ab47bc', alpha=0.8, label='Cross-bloc (US↔China)'),
+                       Line2D([0],[0], color='#f44336', linewidth=2, label='Involves GPT 5.2')]
+        ax3.legend(handles=type_legend, loc='lower right', fontsize=7.5, facecolor='#1a1a2e', edgecolor='#333', labelcolor='white')
+
+        fig.text(0.5, 0.01,
+                 'If divergence were geopolitical, within-bloc pairs (blue, red) would agree more than cross-bloc pairs (purple).\n'
+                 'Instead, the highest-agreement cross-bloc pair (Gemini↔Qwen) outperforms several within-US pairs.',
+                 fontsize=10, color='#90caf9', ha='center', fontstyle='italic',
+                 bbox=dict(boxstyle='round,pad=0.5', facecolor='#1a1a2e', edgecolor='#333'))
+
+        plt.tight_layout(rect=[0, 0.06, 1, 0.93])
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#0d1117')
+        plt.close(fig)
+        buf.seek(0)
+        img_b64 = base64.b64encode(buf.read()).decode()
+        divergence_img_html = f'<img src="data:image/png;base64,{img_b64}" style="width:100%;border-radius:8px;margin-bottom:1.5rem" alt="Model divergence analysis">'
+    except Exception as e:
+        divergence_img_html = f'<p style="color:#888">Chart generation failed: {_esc(str(e))}</p>'
+
     agreement_html = f"""
+    {divergence_img_html}
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem">
         <div style="background:#161b22;border-radius:10px;padding:1rem;text-align:center">
             <div style="font-size:.78rem;color:#888">Avg Exact Agreement</div>
