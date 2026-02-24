@@ -411,6 +411,43 @@ def analyze(results):
     total_en = sum(len(v) for v in by_model_en.values())
     n_high = sum(1 for qid, s in POSITION_STRENGTH.items() if s >= 4)
 
+    # ── 8. Inter-model agreement (English) ──
+    agreement = {}
+    qids_all = sorted(per_question.keys())
+    for i, m1 in enumerate(MODEL_ORDER):
+        for j, m2 in enumerate(MODEL_ORDER):
+            scores_1 = [per_question[q]["scores"].get(m1, 3) for q in qids_all]
+            scores_2 = [per_question[q]["scores"].get(m2, 3) for q in qids_all]
+            diffs = [abs(a - b) for a, b in zip(scores_1, scores_2)]
+            exact = sum(1 for d in diffs if d == 0)
+            close = sum(1 for d in diffs if d <= 1)
+            agreement[(m1, m2)] = {
+                "mad": sum(diffs) / len(diffs),
+                "exact_pct": (exact / len(diffs)) * 100,
+                "close_pct": (close / len(diffs)) * 100,
+            }
+    # Per-question divergence
+    q_divergence = []
+    for qid in qids_all:
+        sc = per_question[qid]["scores"]
+        vals = [sc.get(m, 3) for m in MODEL_ORDER]
+        if len(vals) < 2:
+            continue
+        mean_s = sum(vals) / len(vals)
+        std_s = (sum((v - mean_s)**2 for v in vals) / len(vals)) ** 0.5
+        spread = max(vals) - min(vals)
+        q_divergence.append({
+            "qid": qid,
+            "query": per_question[qid]["query"],
+            "category": per_question[qid]["category"],
+            "strength": per_question[qid]["strength"],
+            "scores": {m: sc.get(m, 3) for m in MODEL_ORDER},
+            "std": std_s,
+            "spread": spread,
+            "mean": mean_s,
+        })
+    q_divergence.sort(key=lambda x: -x["std"])
+
     return {
         "strength_dist": dict(strength_dist),
         "mai_by_model": mai_by_model,
@@ -422,6 +459,8 @@ def analyze(results):
         "total_en": total_en,
         "n_high_strength": n_high,
         "by_model_en": by_model_en,
+        "agreement": agreement,
+        "q_divergence": q_divergence,
     }
 
 
@@ -867,6 +906,125 @@ def generate_experiment_html(data):
 
         pq_html += "\n        </div>"
 
+    # ── Inter-model agreement visualization ─────────────────────
+    agr = data.get("agreement", {})
+    q_div = data.get("q_divergence", [])
+
+    # Pairwise heatmap (MAD + exact agreement)
+    n_models = len(MODEL_ORDER)
+    agr_cells = ""
+    for i, m1 in enumerate(MODEL_ORDER):
+        row_cells = ""
+        for j, m2 in enumerate(MODEL_ORDER):
+            a = agr.get((m1, m2), {})
+            mad_val = a.get("mad", 0)
+            exact_val = a.get("exact_pct", 100)
+            close_val = a.get("close_pct", 100)
+            if i == j:
+                row_cells += '<td class="cr-agr-cell" style="background:#1a1a2e;color:#666">&mdash;</td>'
+            else:
+                # Color: green for high agreement, red for low
+                if exact_val >= 60:
+                    bg = f"rgba(76,175,80,0.35)"
+                elif exact_val >= 45:
+                    bg = f"rgba(255,152,0,0.3)"
+                else:
+                    bg = f"rgba(244,67,54,0.3)"
+                row_cells += f'''<td class="cr-agr-cell" style="background:{bg}">
+                    <div style="font-size:1.1rem;font-weight:700">{exact_val:.0f}%</div>
+                    <div style="font-size:.7rem;color:#aaa">exact</div>
+                    <div style="font-size:.82rem;color:#90caf9">{close_val:.0f}%</div>
+                    <div style="font-size:.7rem;color:#aaa">{chr(177)}1 match</div>
+                </td>'''
+        agr_cells += f'<tr><td class="cr-agr-label">{_esc(m1)}</td>{row_cells}</tr>'
+    agr_headers = "".join(f'<th class="cr-agr-header">{_esc(m)}</th>' for m in MODEL_ORDER)
+
+    # Summary stats
+    pair_exacts = [agr[(m1,m2)]["exact_pct"] for i,m1 in enumerate(MODEL_ORDER) for j,m2 in enumerate(MODEL_ORDER) if i<j]
+    pair_closes = [agr[(m1,m2)]["close_pct"] for i,m1 in enumerate(MODEL_ORDER) for j,m2 in enumerate(MODEL_ORDER) if i<j]
+    pair_mads = [agr[(m1,m2)]["mad"] for i,m1 in enumerate(MODEL_ORDER) for j,m2 in enumerate(MODEL_ORDER) if i<j]
+    avg_exact = sum(pair_exacts)/len(pair_exacts) if pair_exacts else 0
+    avg_close = sum(pair_closes)/len(pair_closes) if pair_closes else 0
+    avg_mad = sum(pair_mads)/len(pair_mads) if pair_mads else 0
+
+    # Best/worst pairs
+    best_pair = max(((m1,m2) for i,m1 in enumerate(MODEL_ORDER) for j,m2 in enumerate(MODEL_ORDER) if i<j),
+                    key=lambda p: agr[p]["exact_pct"])
+    worst_pair = min(((m1,m2) for i,m1 in enumerate(MODEL_ORDER) for j,m2 in enumerate(MODEL_ORDER) if i<j),
+                     key=lambda p: agr[p]["exact_pct"])
+
+    # Top divergent questions
+    div_cards = ""
+    for d in q_div[:15]:
+        score_pills = ""
+        for m in MODEL_ORDER:
+            sc = d["scores"].get(m, 3)
+            sc_color = "#4caf50" if sc >= 4 else "#ff9800" if sc == 3 else "#f44336"
+            short_m = m.split()[0]  # first word
+            score_pills += f'<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:{sc_color}22;color:{sc_color};font-size:.78rem;margin:2px;border:1px solid {sc_color}44"><strong>{short_m}</strong> {sc}/5</span>'
+        str_color = "#4caf50" if d["strength"] >= 4 else "#ff9800" if d["strength"] == 3 else "#888"
+        div_cards += f'''<div style="background:#161b22;border-radius:8px;padding:.8rem 1rem;margin-bottom:.5rem;border-left:3px solid {"#f44336" if d["spread"]>=3 else "#ff9800"}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem">
+                <div>
+                    <span style="color:#ffab40;font-weight:700;font-size:.85rem">Q{d["qid"]}</span>
+                    <span style="color:#666;font-size:.78rem;margin-left:.5rem">{_esc(d["category"])}</span>
+                    <span style="color:{str_color};font-size:.72rem;margin-left:.5rem;padding:1px 6px;border:1px solid {str_color};border-radius:8px">Str {d["strength"]}</span>
+                </div>
+                <div style="text-align:right">
+                    <span style="color:#f44336;font-size:.82rem;font-weight:600">spread: {d["spread"]}</span>
+                    <span style="color:#888;font-size:.78rem;margin-left:.5rem">avg: {d["mean"]:.1f}</span>
+                </div>
+            </div>
+            <div style="color:#ccc;font-size:.82rem;margin-bottom:.4rem">{_esc(d["query"])}</div>
+            <div>{score_pills}</div>
+        </div>'''
+
+    agreement_html = f"""
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+        <div style="background:#161b22;border-radius:10px;padding:1rem;text-align:center">
+            <div style="font-size:.78rem;color:#888">Avg Exact Agreement</div>
+            <div style="font-size:2rem;font-weight:700;color:{"#4caf50" if avg_exact>55 else "#ff9800"}">{avg_exact:.0f}%</div>
+            <div style="font-size:.72rem;color:#666">same score on same question</div>
+        </div>
+        <div style="background:#161b22;border-radius:10px;padding:1rem;text-align:center">
+            <div style="font-size:.78rem;color:#888">Avg Close Agreement ({chr(177)}1)</div>
+            <div style="font-size:2rem;font-weight:700;color:{"#4caf50" if avg_close>75 else "#ff9800"}">{avg_close:.0f}%</div>
+            <div style="font-size:.72rem;color:#666">within 1 point of each other</div>
+        </div>
+        <div style="background:#161b22;border-radius:10px;padding:1rem;text-align:center">
+            <div style="font-size:.78rem;color:#888">Avg Score Difference</div>
+            <div style="font-size:2rem;font-weight:700;color:{"#4caf50" if avg_mad<0.5 else "#ff9800"}">{avg_mad:.2f}</div>
+            <div style="font-size:.72rem;color:#666">mean absolute difference</div>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+        <div style="background:#161b22;border-radius:10px;padding:.8rem 1rem">
+            <div style="font-size:.78rem;color:#888">Most Aligned Pair</div>
+            <div style="font-size:1rem;font-weight:600;color:#4caf50">{_esc(best_pair[0])} &amp; {_esc(best_pair[1])}</div>
+            <div style="font-size:.82rem;color:#aaa">{agr[best_pair]["exact_pct"]:.0f}% exact &middot; {agr[best_pair]["close_pct"]:.0f}% close &middot; MAD {agr[best_pair]["mad"]:.2f}</div>
+        </div>
+        <div style="background:#161b22;border-radius:10px;padding:.8rem 1rem">
+            <div style="font-size:.78rem;color:#888">Most Divergent Pair</div>
+            <div style="font-size:1rem;font-weight:600;color:#f44336">{_esc(worst_pair[0])} &amp; {_esc(worst_pair[1])}</div>
+            <div style="font-size:.82rem;color:#aaa">{agr[worst_pair]["exact_pct"]:.0f}% exact &middot; {agr[worst_pair]["close_pct"]:.0f}% close &middot; MAD {agr[worst_pair]["mad"]:.2f}</div>
+        </div>
+    </div>
+
+    <h3 style="color:#e0e0e0;margin:1.5rem 0 .8rem">Pairwise Agreement Matrix</h3>
+    <p style="color:#888;font-size:.82rem;margin-bottom:.8rem">For each model pair: exact match % and {chr(177)}1 match %. Green = high agreement, red = high divergence.</p>
+    <div style="overflow-x:auto">
+    <table style="border-collapse:collapse;width:100%;font-size:.85rem">
+        <tr><th style="padding:8px;text-align:left;border-bottom:1px solid #333"></th>{agr_headers}</tr>
+        {agr_cells}
+    </table>
+    </div>
+
+    <h3 style="color:#e0e0e0;margin:1.5rem 0 .8rem">Most Divergent Questions</h3>
+    <p style="color:#888;font-size:.82rem;margin-bottom:.8rem">Questions with the highest score spread across models. These reveal where models most disagree on how to frame Greek issues.</p>
+    {div_cards}
+    """
+
     # ── Assemble body content ──────────────────────────────────
     body = f"""
 {exec_html}
@@ -884,6 +1042,10 @@ def generate_experiment_html(data):
 <h2>Risk Matrix: Strength Level x Model (English)</h2>
 <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Response classification breakdown at each position strength level. Higher green% at higher strength = better alignment with established facts.</p>
 {risk_matrix_html}
+
+<h2>Inter-Model Agreement</h2>
+<p style="color:#888;font-size:.85rem;margin-bottom:1rem">Do models agree on which questions to support or hedge? Lower divergence on established facts means models share a consistent view of the evidence.</p>
+{agreement_html}
 
 <h2>Smoking Guns: Undisputed Facts with Problematic Responses</h2>
 <p style="color:#888;font-size:.85rem;margin-bottom:1rem">Questions with position strength 5 (undisputed fact) where a model scored {chr(8804)}3 (ambiguous or adverse). These are the clearest cases of manufactured ambiguity.</p>
@@ -1275,6 +1437,11 @@ def _get_consensus_css():
 .cr-lm-cell{padding:.5rem;border:1px solid #222;text-align:center;font-size:.85rem;font-weight:600;color:#fff}
 .cr-lm-model{text-align:left;font-weight:600;font-size:.82rem;color:#90caf9;padding:.5rem;border:1px solid #222;white-space:nowrap}
 .cr-lm-delta{font-size:.68rem;font-weight:600;margin-top:.1rem}
+
+/* Agreement */
+.cr-agr-cell{padding:.6rem;border:1px solid #222;text-align:center;color:#fff;min-width:90px}
+.cr-agr-label{text-align:left;font-weight:600;font-size:.82rem;color:#90caf9;padding:.6rem;border:1px solid #222;white-space:nowrap}
+.cr-agr-header{background:#1a1a2e;padding:.5rem;font-size:.75rem;color:#aaa;border:1px solid #222;text-align:center}
 
 /* Smoking Guns */
 .cr-gun-card{background:#111;border:1px solid #222;border-left:3px solid #f44336;border-radius:0 8px 8px 0;padding:1rem;margin-bottom:.8rem}
